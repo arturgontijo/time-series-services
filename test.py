@@ -167,7 +167,7 @@ def main():
         num_days_back = 8
 
         for i in range(1, num_days_back + 1):
-            data["p_" + str(i)] = np.where(ts_data["Close"] > ts_data["Close"].shift(i), 1, 0)  # i: number of look back days
+            ts_data["p_" + str(i)] = np.where(ts_data["Close"] > ts_data["Close"].shift(i), 1, 0)  # i: number of look back days
             predictor_names.append("p_" + str(i))
 
         # If you want to save the file to your local drive
