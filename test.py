@@ -10,6 +10,7 @@ import pandas as pd
 from pandas_datareader import data
 import pickle as pkl
 import time
+import traceback
 
 C.cntk_py.set_fixed_random_seed(1) # fix a random seed for CNTK components
 pd.options.mode.chained_assignment = None  # default='warn'
@@ -129,177 +130,181 @@ def create_drawdowns(equity_curve):
 
 def main():
 
-    # Check for data in local cache
-    if os.path.exists(data_file):
-        print("File already exists", data_file)
-        data = pd.read_pickle(data_file)
-    else:
-        # If not there we might be running in CNTK's test infrastructure
-        if is_test():
-            test_file = os.path.join(os.environ[envvar], 'Tutorials', 'data', 'stock', 'stock_SPY.pkl')
-            if os.path.isfile(test_file):
-                print("Reading data from test data directory")
-                data = pd.read_pickle(test_file)
-            else:
-                print("Test data directory missing file", test_file)
-                print("Downloading data from Google Finance")
-                data = download(data_file)
+    try:
+        # Check for data in local cache
+        if os.path.exists(data_file):
+            print("File already exists", data_file)
+            data = pd.read_pickle(data_file)
         else:
-            # Local cache is not present and not test env
-            # download the data from Google finance and cache it in a local directory
-            # Please check if there is trade data for the chosen stock symbol during this period
-            data = download(data_file)
+            # If not there we might be running in CNTK's test infrastructure
+            if is_test():
+                test_file = os.path.join(os.environ[envvar], 'Tutorials', 'data', 'stock', 'stock_SPY.pkl')
+                if os.path.isfile(test_file):
+                    print("Reading data from test data directory")
+                    data = pd.read_pickle(test_file)
+                else:
+                    print("Test data directory missing file", test_file)
+                    print("Downloading data from Google Finance")
+                    data = download(data_file)
+            else:
+                # Local cache is not present and not test env
+                # download the data from Google finance and cache it in a local directory
+                # Please check if there is trade data for the chosen stock symbol during this period
+                data = download(data_file)
 
-    # Feature name list
-    predictor_names = []
+        # Feature name list
+        predictor_names = []
 
-    # Compute price difference as a feature
-    data["diff"] = np.abs((data["Close"] - data["Close"].shift(1)) / data["Close"]).fillna(0)
-    predictor_names.append("diff")
+        # Compute price difference as a feature
+        data["diff"] = np.abs((data["Close"] - data["Close"].shift(1)) / data["Close"]).fillna(0)
+        predictor_names.append("diff")
 
-    # Compute the volume difference as a feature
-    data["v_diff"] = np.abs((data["Volume"] - data["Volume"].shift(1)) / data["Volume"]).fillna(0)
-    predictor_names.append("v_diff")
+        # Compute the volume difference as a feature
+        data["v_diff"] = np.abs((data["Volume"] - data["Volume"].shift(1)) / data["Volume"]).fillna(0)
+        predictor_names.append("v_diff")
 
-    # Compute the stock being up (1) or down (0) over different day offsets compared to current dat closing price
-    num_days_back = 8
+        # Compute the stock being up (1) or down (0) over different day offsets compared to current dat closing price
+        num_days_back = 8
 
-    for i in range(1, num_days_back + 1):
-        data["p_" + str(i)] = np.where(data["Close"] > data["Close"].shift(i), 1, 0)  # i: number of look back days
-        predictor_names.append("p_" + str(i))
+        for i in range(1, num_days_back + 1):
+            data["p_" + str(i)] = np.where(data["Close"] > data["Close"].shift(i), 1, 0)  # i: number of look back days
+            predictor_names.append("p_" + str(i))
 
-    # If you want to save the file to your local drive
-    # data.to_csv("PATH_TO_SAVE.csv")
-    data.head(10)
+        # If you want to save the file to your local drive
+        # data.to_csv("PATH_TO_SAVE.csv")
+        data.head(10)
 
-    data["next_day"] = np.where(data["Close"].shift(-1) > data["Close"], 1, 0)
-    data["next_day_opposite"] = np.where(data["next_day"] == 1, 0, 1)  # The label must be one-hot encoded
+        data["next_day"] = np.where(data["Close"].shift(-1) > data["Close"], 1, 0)
+        data["next_day_opposite"] = np.where(data["next_day"] == 1, 0, 1)  # The label must be one-hot encoded
 
-    # Establish the start and end date of our training timeseries (picked 2000 days before the market crash)
-    training_data = data["2001-02-05":"2009-01-20"]
+        # Establish the start and end date of our training timeseries (picked 2000 days before the market crash)
+        training_data = data["2001-02-05":"2009-01-20"]
 
-    # We define our test data as: data["2008-01-02":]
-    # This example allows to include data up to current date
+        # We define our test data as: data["2008-01-02":]
+        # This example allows to include data up to current date
 
-    test_data = data["2009-01-20":"2016-12-29"]
-    training_features = np.asarray(training_data[predictor_names], dtype="float32")
-    training_labels = np.asarray(training_data[["next_day", "next_day_opposite"]], dtype="float32")
+        test_data = data["2009-01-20":"2016-12-29"]
+        training_features = np.asarray(training_data[predictor_names], dtype="float32")
+        training_labels = np.asarray(training_data[["next_day", "next_day_opposite"]], dtype="float32")
 
-    # Lets build the network
-    input_dim = 2 + num_days_back
-    num_output_classes = 2  # Remember we need to have 2 since we are trying to classify if the market goes up or down 1 hot encoded
-    num_hidden_layers = 2
-    hidden_layers_dim = 2 + num_days_back
-    input_dynamic_axes = [C.Axis.default_batch_axis()]
-    net_input = C.input_variable(input_dim, dynamic_axes=input_dynamic_axes)
-    label = C.input_variable(num_output_classes, dynamic_axes=input_dynamic_axes)
+        # Lets build the network
+        input_dim = 2 + num_days_back
+        num_output_classes = 2  # Remember we need to have 2 since we are trying to classify if the market goes up or down 1 hot encoded
+        num_hidden_layers = 2
+        hidden_layers_dim = 2 + num_days_back
+        input_dynamic_axes = [C.Axis.default_batch_axis()]
+        net_input = C.input_variable(input_dim, dynamic_axes=input_dynamic_axes)
+        label = C.input_variable(num_output_classes, dynamic_axes=input_dynamic_axes)
 
-    z = create_model(net_input, num_output_classes, num_hidden_layers, hidden_layers_dim)
-    loss = C.cross_entropy_with_softmax(z, label)
-    label_error = C.classification_error(z, label)
-    lr_per_minibatch = C.learning_parameter_schedule(0.125)
-    trainer = C.Trainer(z, (loss, label_error), [C.sgd(z.parameters, lr=lr_per_minibatch)])
+        z = create_model(net_input, num_output_classes, num_hidden_layers, hidden_layers_dim)
+        loss = C.cross_entropy_with_softmax(z, label)
+        label_error = C.classification_error(z, label)
+        lr_per_minibatch = C.learning_parameter_schedule(0.125)
+        trainer = C.Trainer(z, (loss, label_error), [C.sgd(z.parameters, lr=lr_per_minibatch)])
 
-    # Initialize the parameters for the trainer, we will train in large minibatches in sequential order
-    minibatch_size = 100
-    num_minibatches = len(training_data.index) // minibatch_size
+        # Initialize the parameters for the trainer, we will train in large minibatches in sequential order
+        minibatch_size = 100
+        num_minibatches = len(training_data.index) // minibatch_size
 
-    # Run the trainer on and perform model training
-    training_progress_output_freq = 1
+        # Run the trainer on and perform model training
+        training_progress_output_freq = 1
 
-    # Visualize the loss over minibatch
-    plotdata = {"batchsize": [], "loss": [], "error": []}
+        # Visualize the loss over minibatch
+        plotdata = {"batchsize": [], "loss": [], "error": []}
 
-    # It is key that we make only one pass through the data linearly in time
-    num_passes = 1
+        # It is key that we make only one pass through the data linearly in time
+        num_passes = 1
 
-    # Train our neural network
-    tf = np.split(training_features, num_minibatches)
-    tl = np.split(training_labels, num_minibatches)
+        # Train our neural network
+        tf = np.split(training_features, num_minibatches)
+        tl = np.split(training_labels, num_minibatches)
 
-    print("Number of mini batches")
-    print(len(tf))
-    print("The shape of the training feature minibatch")
-    print(tf[0].shape)
+        print("Number of mini batches")
+        print(len(tf))
+        print("The shape of the training feature minibatch")
+        print(tf[0].shape)
 
-    for i in range(num_minibatches * num_passes):  # multiply by the
-        features = np.ascontiguousarray(tf[i % num_minibatches])
-        labels = np.ascontiguousarray(tl[i % num_minibatches])
+        for i in range(num_minibatches * num_passes):  # multiply by the
+            features = np.ascontiguousarray(tf[i % num_minibatches])
+            labels = np.ascontiguousarray(tl[i % num_minibatches])
 
-        # Specify the mapping of input variables in the model to actual minibatch data to be trained with
-        trainer.train_minibatch({input: features, label: labels})
-        batchsize, loss, error = print_training_progress(trainer, i, training_progress_output_freq, verbose=1)
-        if not (loss == "NA" or error == "NA"):
-            plotdata["batchsize"].append(batchsize)
-            plotdata["loss"].append(loss)
-            plotdata["error"].append(error)
+            # Specify the mapping of input variables in the model to actual minibatch data to be trained with
+            trainer.train_minibatch({input: features, label: labels})
+            batchsize, loss, error = print_training_progress(trainer, i, training_progress_output_freq, verbose=1)
+            if not (loss == "NA" or error == "NA"):
+                plotdata["batchsize"].append(batchsize)
+                plotdata["loss"].append(loss)
+                plotdata["error"].append(error)
 
-    # Now that we have trained the net, and we will do out of sample test to see how we did.
-    # and then more importantly analyze how that set did
+        # Now that we have trained the net, and we will do out of sample test to see how we did.
+        # and then more importantly analyze how that set did
 
-    test_features = np.ascontiguousarray(test_data[predictor_names], dtype="float32")
-    test_labels = np.ascontiguousarray(test_data[["next_day", "next_day_opposite"]], dtype="float32")
+        test_features = np.ascontiguousarray(test_data[predictor_names], dtype="float32")
+        test_labels = np.ascontiguousarray(test_data[["next_day", "next_day_opposite"]], dtype="float32")
 
-    avg_error = trainer.test_minibatch({input: test_features, label: test_labels})
-    print("Average error: {0:2.2f}%".format(avg_error * 100))
+        avg_error = trainer.test_minibatch({input: test_features, label: test_labels})
+        print("Average error: {0:2.2f}%".format(avg_error * 100))
 
-    out = C.softmax(z)
-    predicted_label_prob = out.eval({input: test_features})
-    test_data["p_up"] = pd.Series(predicted_label_prob[:, 0], index=test_data.index)
-    test_data["p_down"] = predicted_label_prob[:, 1]
-    test_data['long_entries'] = np.where((test_data.p_up > 0.55), 1, 0)
-    test_data['short_entries'] = np.where((test_data.p_down > 0.55), -1, 0)
-    test_data['positions'] = test_data['long_entries'].fillna(0) + test_data['short_entries'].fillna(0)
+        out = C.softmax(z)
+        predicted_label_prob = out.eval({input: test_features})
+        test_data["p_up"] = pd.Series(predicted_label_prob[:, 0], index=test_data.index)
+        test_data["p_down"] = predicted_label_prob[:, 1]
+        test_data['long_entries'] = np.where((test_data.p_up > 0.55), 1, 0)
+        test_data['short_entries'] = np.where((test_data.p_down > 0.55), -1, 0)
+        test_data['positions'] = test_data['long_entries'].fillna(0) + test_data['short_entries'].fillna(0)
 
-    test_data["pnl"] = test_data["Close"].diff().shift(-1).fillna(0) * test_data["positions"] / np.where(
-        test_data["Close"] != 0, test_data["Close"], 1)
-    test_data["perc"] = (test_data["Close"] - test_data["Close"].shift(1)) / test_data["Close"].shift(1)
-    monthly = test_data.pnl.resample("M").sum()
-    monthly_spy = test_data["perc"].resample("M").sum()
-    avg_return = np.mean(monthly)
-    std_return = np.std(monthly)
-    sharpe = np.sqrt(12) * avg_return / std_return
-    drawdown = create_drawdowns(monthly.cumsum())
-    spy_drawdown = create_drawdowns(monthly_spy.cumsum())
-    print("TRADING STATS")
-    print("AVG Monthly Return :: " + "{0:.2f}".format(round(avg_return * 100, 2)) + "%")
-    print("STD Monthly        :: " + "{0:.2f}".format(round(std_return * 100, 2)) + "%")
-    print("SHARPE             :: " + "{0:.2f}".format(round(sharpe, 2)))
-    print(
-        "MAX DRAWDOWN       :: " + "{0:.2f}".format(round(drawdown[0] * 100, 2)) + "%, " + str(drawdown[1]) + " months")
-    print("Correlation to SPY :: " + "{0:.2f}".format(round(np.corrcoef(test_data["pnl"], test_data["diff"])[0][1], 2)))
-    print("NUMBER OF TRADES   :: " + str(np.sum(test_data.positions.abs())))
-    print("TOTAL TRADING DAYS :: " + str(len(data)))
-    print("SPY MONTHLY RETURN :: " + "{0:.2f}".format(round(monthly_spy.mean() * 100, 2)) + "%")
-    print("SPY STD RETURN     :: " + "{0:.2f}".format(round(monthly_spy.std() * 100, 2)) + "%")
-    print("SPY SHARPE         :: " + "{0:.2f}".format(round(monthly_spy.mean() / monthly_spy.std() * np.sqrt(12), 2)))
-    print("SPY DRAWDOWN       :: " + "{0:.2f}".format(round(spy_drawdown[0] * 100, 2)) + "%, " + str(
-        spy_drawdown[1]) + " months")
+        test_data["pnl"] = test_data["Close"].diff().shift(-1).fillna(0) * test_data["positions"] / np.where(
+            test_data["Close"] != 0, test_data["Close"], 1)
+        test_data["perc"] = (test_data["Close"] - test_data["Close"].shift(1)) / test_data["Close"].shift(1)
+        monthly = test_data.pnl.resample("M").sum()
+        monthly_spy = test_data["perc"].resample("M").sum()
+        avg_return = np.mean(monthly)
+        std_return = np.std(monthly)
+        sharpe = np.sqrt(12) * avg_return / std_return
+        drawdown = create_drawdowns(monthly.cumsum())
+        spy_drawdown = create_drawdowns(monthly_spy.cumsum())
+        print("TRADING STATS")
+        print("AVG Monthly Return :: " + "{0:.2f}".format(round(avg_return * 100, 2)) + "%")
+        print("STD Monthly        :: " + "{0:.2f}".format(round(std_return * 100, 2)) + "%")
+        print("SHARPE             :: " + "{0:.2f}".format(round(sharpe, 2)))
+        print(
+            "MAX DRAWDOWN       :: " + "{0:.2f}".format(round(drawdown[0] * 100, 2)) + "%, " + str(drawdown[1]) + " months")
+        print("Correlation to SPY :: " + "{0:.2f}".format(round(np.corrcoef(test_data["pnl"], test_data["diff"])[0][1], 2)))
+        print("NUMBER OF TRADES   :: " + str(np.sum(test_data.positions.abs())))
+        print("TOTAL TRADING DAYS :: " + str(len(data)))
+        print("SPY MONTHLY RETURN :: " + "{0:.2f}".format(round(monthly_spy.mean() * 100, 2)) + "%")
+        print("SPY STD RETURN     :: " + "{0:.2f}".format(round(monthly_spy.std() * 100, 2)) + "%")
+        print("SPY SHARPE         :: " + "{0:.2f}".format(round(monthly_spy.mean() / monthly_spy.std() * np.sqrt(12), 2)))
+        print("SPY DRAWDOWN       :: " + "{0:.2f}".format(round(spy_drawdown[0] * 100, 2)) + "%, " + str(
+            spy_drawdown[1]) + " months")
 
-    print(drawdown[0])
+        print(drawdown[0])
 
-    # ===============================================
+        # ===============================================
 
-    test_data["p_up"] = pd.Series(predicted_label_prob[:, 0], index=test_data.index)
-    test_data["p_down"] = predicted_label_prob[:, 1]
-    test_data['long_entries'] = np.where((test_data.p_up > 0.50), 1, 0)
-    test_data['short_entries'] = np.where((test_data.p_down > 0.50), -1, 0)
-    test_data['positions'] = test_data['long_entries'].fillna(0) + test_data['short_entries'].fillna(0)
-    test_data["pnl"] = test_data["Close"].diff().shift(-1).fillna(0) * test_data["positions"] / np.where(
-        test_data["Close"] != 0, test_data["Close"], 1)
-    monthly = test_data.pnl.resample("M").sum()
-    avg_return = np.mean(monthly)
-    std_return = np.std(monthly)
-    sharpe = np.sqrt(12) * avg_return / std_return
-    drawdown = create_drawdowns(monthly.cumsum())
+        test_data["p_up"] = pd.Series(predicted_label_prob[:, 0], index=test_data.index)
+        test_data["p_down"] = predicted_label_prob[:, 1]
+        test_data['long_entries'] = np.where((test_data.p_up > 0.50), 1, 0)
+        test_data['short_entries'] = np.where((test_data.p_down > 0.50), -1, 0)
+        test_data['positions'] = test_data['long_entries'].fillna(0) + test_data['short_entries'].fillna(0)
+        test_data["pnl"] = test_data["Close"].diff().shift(-1).fillna(0) * test_data["positions"] / np.where(
+            test_data["Close"] != 0, test_data["Close"], 1)
+        monthly = test_data.pnl.resample("M").sum()
+        avg_return = np.mean(monthly)
+        std_return = np.std(monthly)
+        sharpe = np.sqrt(12) * avg_return / std_return
+        drawdown = create_drawdowns(monthly.cumsum())
 
-    print("TRADING STATS")
-    print("AVG Monthly Return :: " + "{0:.2f}".format(round(avg_return * 100, 2)) + "%")
-    print("STD Monthly        :: " + "{0:.2f}".format(round(std_return * 100, 2)) + "%")
-    print("SHARPE             :: " + "{0:.2f}".format(round(sharpe, 2)))
-    print(
-        "MAX DRAWDOWN       :: " + "{0:.2f}".format(round(drawdown[0] * 100, 2)) + "%, " + str(drawdown[1]) + " months")
-    print("Correlation to SPY :: " + "{0:.2f}".format(round(np.corrcoef(test_data["pnl"], test_data["diff"])[0][1], 2)))
+        print("TRADING STATS")
+        print("AVG Monthly Return :: " + "{0:.2f}".format(round(avg_return * 100, 2)) + "%")
+        print("STD Monthly        :: " + "{0:.2f}".format(round(std_return * 100, 2)) + "%")
+        print("SHARPE             :: " + "{0:.2f}".format(round(sharpe, 2)))
+        print(
+            "MAX DRAWDOWN       :: " + "{0:.2f}".format(round(drawdown[0] * 100, 2)) + "%, " + str(drawdown[1]) + " months")
+        print("Correlation to SPY :: " + "{0:.2f}".format(round(np.corrcoef(test_data["pnl"], test_data["diff"])[0][1], 2)))
+
+    except:
+        traceback.print_exc()
 
 
 if __name__ == "__main__":
