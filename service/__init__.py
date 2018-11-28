@@ -1,5 +1,5 @@
 registry = {
-    "time_series_service": {
+    "stock_prediction_service": {
         "grpc": 7003,
     },
 }

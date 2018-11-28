@@ -12,42 +12,32 @@ import pickle as pkl
 import time
 import traceback
 
-C.cntk_py.set_fixed_random_seed(1) # fix a random seed for CNTK components
-pd.options.mode.chained_assignment = None  # default='warn'
+# fix a random seed for CNTK components
+C.cntk_py.set_fixed_random_seed(1)
+# default='warn'
+pd.options.mode.chained_assignment = None
 # Set a random seed
 np.random.seed(123)
 
 data_file = os.path.join("data", "Stock", "stock_SPY.pkl")
 
 
-def get_stock_data(contract, s_year, s_month, s_day, e_year, e_month, e_day):
-    """
-    Args:
-        contract (str): the name of the stock/etf
-        s_year (int): start year for data
-        s_month (int): start month
-        s_day (int): start day
-        e_year (int): end year
-        e_month (int): end month
-        e_day (int): end day
-    Returns:
-        Pandas Dataframe: Daily OHLCV bars
-    """
+def get_stock_data(source, contract, s_year, s_month, s_day, e_year, e_month, e_day):
     start = datetime.datetime(s_year, s_month, s_day)
     end = datetime.datetime(e_year, e_month, e_day)
 
     retry_cnt, max_num_retry = 0, 3
 
-    while (retry_cnt < max_num_retry):
+    while retry_cnt < max_num_retry:
         try:
-            bars = data.DataReader(contract, "yahoo", start, end)
+            bars = data.DataReader(contract, source, start, end)
             return bars
         except:
             retry_cnt += 1
             time.sleep(np.random.randint(1, 10))
 
-    print("iex Finance is not reachable")
-    raise Exception('iex Finance is not reachable')
+    print("{} is not reachable".format(source))
+    raise Exception("{} is not reachable".format(source))
 
 
 # We search in cached stock data set with symbol SPY.
@@ -60,7 +50,7 @@ def is_test(): return envvar in os.environ
 
 def download(file_name):
     try:
-        ts_data = get_stock_data("SPY", 2000, 1, 2, 2018, 11, 1)
+        ts_data = get_stock_data("yahoo", "SPY", 2000, 1, 1, 2018, 11, 25)
     except:
         raise Exception("Data could not be downloaded")
 
@@ -116,15 +106,15 @@ def create_drawdowns(equity_curve):
     # Then create the drawdown and duration series
     hwm = [0]
     eq_idx = equity_curve.index
-    drawdown = pd.Series(index = eq_idx)
-    duration = pd.Series(index = eq_idx)
+    drawdown = pd.Series(index=eq_idx)
+    duration = pd.Series(index=eq_idx)
 
     # Loop over the index range
     for t in range(1, len(eq_idx)):
         cur_hwm = max(hwm[t-1], equity_curve[t])
         hwm.append(cur_hwm)
-        drawdown[t]= (hwm[t] - equity_curve[t])
-        duration[t]= 0 if drawdown[t] == 0 else duration[t-1] + 1
+        drawdown[t] = (hwm[t] - equity_curve[t])
+        duration[t] = 0 if drawdown[t] == 0 else duration[t-1] + 1
     return drawdown.max(), duration.max()
 
 
@@ -178,12 +168,13 @@ def main():
         ts_data["next_day_opposite"] = np.where(ts_data["next_day"] == 1, 0, 1)  # The label must be one-hot encoded
 
         # Establish the start and end date of our training timeseries (picked 2000 days before the market crash)
-        training_data = ts_data["2001-02-05":"2009-01-20"]
+        training_data = ts_data["2017-01-01":"2018-01-01"]
 
         # We define our test data as: data["2008-01-02":]
         # This example allows to include data up to current date
 
-        test_data = ts_data["2009-01-20":"2018-10-31"]
+        # test_data = ts_data["2009-01-20":"2018-10-31"]
+        test_data = ts_data["2018-11-12":"2018-11-20"]
         training_features = np.asarray(training_data[predictor_names], dtype="float32")
         training_labels = np.asarray(training_data[["next_day", "next_day_opposite"]], dtype="float32")
 
@@ -256,6 +247,11 @@ def main():
         test_data["pnl"] = test_data["Close"].diff().shift(-1).fillna(0) * test_data["positions"] / np.where(
             test_data["Close"] != 0, test_data["Close"], 1)
         test_data["perc"] = (test_data["Close"] - test_data["Close"].shift(1)) / test_data["Close"].shift(1)
+
+        print("============================================================")
+        print(test_data)
+        print("============================================================")
+
         monthly = test_data.pnl.resample("M").sum()
         monthly_spy = test_data["perc"].resample("M").sum()
         avg_return = np.mean(monthly)
@@ -267,16 +263,14 @@ def main():
         print("AVG Monthly Return :: " + "{0:.2f}".format(round(avg_return * 100, 2)) + "%")
         print("STD Monthly        :: " + "{0:.2f}".format(round(std_return * 100, 2)) + "%")
         print("SHARPE             :: " + "{0:.2f}".format(round(sharpe, 2)))
-        print(
-            "MAX DRAWDOWN       :: " + "{0:.2f}".format(round(drawdown[0] * 100, 2)) + "%, " + str(drawdown[1]) + " months")
+        print("MAX DRAWDOWN       :: " + "{0:.2f}".format(round(drawdown[0] * 100, 2)) + "%, " + str(drawdown[1]) + " months")
         print("Correlation to SPY :: " + "{0:.2f}".format(round(np.corrcoef(test_data["pnl"], test_data["diff"])[0][1], 2)))
         print("NUMBER OF TRADES   :: " + str(np.sum(test_data.positions.abs())))
         print("TOTAL TRADING DAYS :: " + str(len(ts_data)))
         print("SPY MONTHLY RETURN :: " + "{0:.2f}".format(round(monthly_spy.mean() * 100, 2)) + "%")
         print("SPY STD RETURN     :: " + "{0:.2f}".format(round(monthly_spy.std() * 100, 2)) + "%")
         print("SPY SHARPE         :: " + "{0:.2f}".format(round(monthly_spy.mean() / monthly_spy.std() * np.sqrt(12), 2)))
-        print("SPY DRAWDOWN       :: " + "{0:.2f}".format(round(spy_drawdown[0] * 100, 2)) + "%, " + str(
-            spy_drawdown[1]) + " months")
+        print("SPY DRAWDOWN       :: " + "{0:.2f}".format(round(spy_drawdown[0] * 100, 2)) + "%, " + str(spy_drawdown[1]) + " months")
 
         print(drawdown[0])
 
@@ -299,8 +293,7 @@ def main():
         print("AVG Monthly Return :: " + "{0:.2f}".format(round(avg_return * 100, 2)) + "%")
         print("STD Monthly        :: " + "{0:.2f}".format(round(std_return * 100, 2)) + "%")
         print("SHARPE             :: " + "{0:.2f}".format(round(sharpe, 2)))
-        print(
-            "MAX DRAWDOWN       :: " + "{0:.2f}".format(round(drawdown[0] * 100, 2)) + "%, " + str(drawdown[1]) + " months")
+        print("MAX DRAWDOWN       :: " + "{0:.2f}".format(round(drawdown[0] * 100, 2)) + "%, " + str(drawdown[1]) + " months")
         print("Correlation to SPY :: " + "{0:.2f}".format(round(np.corrcoef(test_data["pnl"], test_data["diff"])[0][1], 2)))
 
     except:
