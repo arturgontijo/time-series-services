@@ -168,7 +168,7 @@ def main():
         ts_data["next_day_opposite"] = np.where(ts_data["next_day"] == 1, 0, 1)  # The label must be one-hot encoded
 
         # Establish the start and end date of our training timeseries (picked 2000 days before the market crash)
-        training_data = ts_data["2017-01-01":"2018-01-01"]
+        training_data = ts_data["2017-01-02":"2018-01-01"]
 
         # We define our test data as: data["2008-01-02":]
         # This example allows to include data up to current date
