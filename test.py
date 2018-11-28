@@ -271,7 +271,7 @@ def main():
             "MAX DRAWDOWN       :: " + "{0:.2f}".format(round(drawdown[0] * 100, 2)) + "%, " + str(drawdown[1]) + " months")
         print("Correlation to SPY :: " + "{0:.2f}".format(round(np.corrcoef(test_data["pnl"], test_data["diff"])[0][1], 2)))
         print("NUMBER OF TRADES   :: " + str(np.sum(test_data.positions.abs())))
-        print("TOTAL TRADING DAYS :: " + str(len(data)))
+        print("TOTAL TRADING DAYS :: " + str(len(ts_data)))
         print("SPY MONTHLY RETURN :: " + "{0:.2f}".format(round(monthly_spy.mean() * 100, 2)) + "%")
         print("SPY STD RETURN     :: " + "{0:.2f}".format(round(monthly_spy.std() * 100, 2)) + "%")
         print("SPY SHARPE         :: " + "{0:.2f}".format(round(monthly_spy.mean() / monthly_spy.std() * np.sqrt(12), 2)))
