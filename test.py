@@ -60,7 +60,7 @@ def is_test(): return envvar in os.environ
 
 def download(file_name):
     try:
-        ts_data = get_stock_data("SPY", 2013, 2, 2, 2018, 1, 1)
+        ts_data = get_stock_data("SPY", 2000, 1, 2, 2018, 11, 1)
     except:
         raise Exception("Data could not be downloaded")
 
