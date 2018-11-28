@@ -183,7 +183,7 @@ def main():
         # We define our test data as: data["2008-01-02":]
         # This example allows to include data up to current date
 
-        test_data = ts_data["2009-01-20":"2016-12-29"]
+        test_data = ts_data["2009-01-20":"2018-10-31"]
         training_features = np.asarray(training_data[predictor_names], dtype="float32")
         training_labels = np.asarray(training_data[["next_day", "next_day_opposite"]], dtype="float32")
 
