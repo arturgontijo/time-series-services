@@ -36,14 +36,14 @@ def get_stock_data(contract, s_year, s_month, s_day, e_year, e_month, e_day):
 
     while (retry_cnt < max_num_retry):
         try:
-            bars = data.DataReader(contract, "google", start, end)
+            bars = data.DataReader(contract, "iex", start, end)
             return bars
         except:
             retry_cnt += 1
             time.sleep(np.random.randint(1, 10))
 
-    print("Google Finance is not reachable")
-    raise Exception('Google Finance is not reachable')
+    print("iex Finance is not reachable")
+    raise Exception('iex Finance is not reachable')
 
 
 # We search in cached stock data set with symbol SPY.
@@ -56,7 +56,7 @@ def is_test(): return envvar in os.environ
 
 def download(data_file):
     try:
-        data = get_stock_data("SPY", 2000, 1, 2, 2017, 1, 1)
+        data = get_stock_data("SPY", 2015, 1, 2, 2017, 1, 1)
     except:
         raise Exception("Data could not be downloaded")
 
