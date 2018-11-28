@@ -40,7 +40,7 @@ def get_stock_data(contract, s_year, s_month, s_day, e_year, e_month, e_day):
 
     while (retry_cnt < max_num_retry):
         try:
-            bars = data.DataReader(contract, "iex", start, end)
+            bars = data.DataReader(contract, "yahoo", start, end)
             return bars
         except:
             retry_cnt += 1
@@ -178,12 +178,12 @@ def main():
         ts_data["next_day_opposite"] = np.where(ts_data["next_day"] == 1, 0, 1)  # The label must be one-hot encoded
 
         # Establish the start and end date of our training timeseries (picked 2000 days before the market crash)
-        training_data = ts_data["2013-02-05":"2015-01-20"]
+        training_data = ts_data["2001-02-05":"2009-01-20"]
 
         # We define our test data as: data["2008-01-02":]
         # This example allows to include data up to current date
 
-        test_data = ts_data["2015-01-20":"2017-12-29"]
+        test_data = ts_data["2009-01-20":"2016-12-29"]
         training_features = np.asarray(training_data[predictor_names], dtype="float32")
         training_labels = np.asarray(training_data[["next_day", "next_day_opposite"]], dtype="float32")
 
