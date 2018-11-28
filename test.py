@@ -60,7 +60,7 @@ def is_test(): return envvar in os.environ
 
 def download(file_name):
     try:
-        ts_data = get_stock_data("SPY", 2012, 2, 2, 2017, 1, 1)
+        ts_data = get_stock_data("SPY", 2013, 2, 2, 2018, 1, 1)
     except:
         raise Exception("Data could not be downloaded")
 
@@ -144,7 +144,7 @@ def main():
                     ts_data = pd.read_pickle(test_file)
                 else:
                     print("Test data directory missing file", test_file)
-                    print("Downloading data from Google Finance")
+                    print("Downloading data Finance")
                     ts_data = download(data_file)
             else:
                 # Local cache is not present and not test env
@@ -178,12 +178,12 @@ def main():
         ts_data["next_day_opposite"] = np.where(ts_data["next_day"] == 1, 0, 1)  # The label must be one-hot encoded
 
         # Establish the start and end date of our training timeseries (picked 2000 days before the market crash)
-        training_data = ts_data["2012-02-05":"2014-01-20"]
+        training_data = ts_data["2013-02-05":"2015-01-20"]
 
         # We define our test data as: data["2008-01-02":]
         # This example allows to include data up to current date
 
-        test_data = ts_data["2014-01-20":"2016-12-29"]
+        test_data = ts_data["2015-01-20":"2017-12-29"]
         training_features = np.asarray(training_data[predictor_names], dtype="float32")
         training_labels = np.asarray(training_data[["next_day", "next_day_opposite"]], dtype="float32")
 
