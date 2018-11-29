@@ -5,19 +5,19 @@ import grpc
 import concurrent.futures as futures
 
 from service import common
-from service.stock_prediction import StockPrediction
+from service.next_day_trend import NextDayTrend
 
 # Importing the generated codes from buildproto.sh
-from service.service_spec import stock_prediction_pb2_grpc as grpc_bt_grpc
-from service.service_spec.stock_prediction_pb2 import Output
+from service.service_spec import next_day_trend_pb2_grpc as grpc_bt_grpc
+from service.service_spec.next_day_trend_pb2 import Output
 
 logging.basicConfig(level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")
-log = logging.getLogger("stock_prediction_service")
+log = logging.getLogger("next_day_trend_service")
 
 
 # Create a class to be added to the gRPC server
 # derived from the protobuf codes.
-class StockPredictionServicer(grpc_bt_grpc.StockPredictionServicer):
+class NextDayTrendServicer(grpc_bt_grpc.NextDayTrendServicer):
     def __init__(self):
         self.source = ""
         self.contract = ""
@@ -27,12 +27,12 @@ class StockPredictionServicer(grpc_bt_grpc.StockPredictionServicer):
 
         self.output = ""
 
-        log.info("StockPredictionServicer created")
+        log.info("NextDayTrendServicer created")
 
     # The method that will be exposed to the snet-cli call command.
     # request: incoming data
     # context: object that provides RPC-specific information (timeout, etc).
-    def predict(self, request, context):
+    def trend(self, request, context):
         # In our case, request is a Input() object (from .proto file)
         self.source = request.source
         self.contract = request.contract
@@ -43,14 +43,14 @@ class StockPredictionServicer(grpc_bt_grpc.StockPredictionServicer):
         # To respond we need to create a Output() object (from .proto file)
         self.output = Output()
 
-        sp = StockPrediction(self.source, self.contract, self.start, self.end, self.target_date)
-        self.output.response = str(sp.stock_prediction()).encode("utf-8")
-        log.info("stock_prediction({},{},{},{},{})={}".format(self.source,
-                                                               self.contract,
-                                                               self.start,
-                                                               self.end,
-                                                               self.target_date,
-                                                               self.output.response))
+        sp = NextDayTrend(self.source, self.contract, self.start, self.end, self.target_date)
+        self.output.response = str(sp.asset_trend()).encode("utf-8")
+        log.info("asset_trend({},{},{},{},{})={}".format(self.source,
+                                                         self.contract,
+                                                         self.start,
+                                                         self.end,
+                                                         self.target_date,
+                                                         self.output.response))
         return self.output
 
 
@@ -64,7 +64,7 @@ class StockPredictionServicer(grpc_bt_grpc.StockPredictionServicer):
 # (from generated .py files by protobuf compiler)
 def serve(max_workers=10, port=7777):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
-    grpc_bt_grpc.add_StockPredictionServicer_to_server(StockPredictionServicer(), server)
+    grpc_bt_grpc.add_NextDayTrendServicer_to_server(NextDayTrendServicer(), server)
     server.add_insecure_port("[::]:{}".format(port))
     return server
 

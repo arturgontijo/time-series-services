@@ -15,16 +15,16 @@ if __name__ == "__main__":
             if sys.argv[1] == "test":
                 test_flag = True
 
-        endpoint = input("Endpoint (localhost:{}): ".format(registry["stock_prediction_service"]["grpc"]))
+        endpoint = input("Endpoint (localhost:{}): ".format(registry["next_day_trend_service"]["grpc"]))
         if endpoint == "":
-            endpoint = "localhost:{}".format(registry["stock_prediction_service"]["grpc"])
+            endpoint = "localhost:{}".format(registry["next_day_trend_service"]["grpc"])
 
         # Open a gRPC channel
         channel = grpc.insecure_channel("{}".format(endpoint))
 
-        grpc_method = input("Method (predict): ") if not test_flag else ""
+        grpc_method = input("Method (trend): ") if not test_flag else ""
         if grpc_method == "":
-            grpc_method = "predict"
+            grpc_method = "trend"
 
         source = input("Source(yahoo): ") if not test_flag else ""
         if source == "":
@@ -47,13 +47,13 @@ if __name__ == "__main__":
             target_date = "2018-11-12"
 
         if grpc_method == "predict":
-            stub = grpc_bt_grpc.StockPredictionStub(channel)
+            stub = grpc_bt_grpc.NextDayTrendStub(channel)
             grpc_input = grpc_bt_pb2.Input(source=source,
                                            contract=contract,
                                            start=start_date,
                                            end=end_date,
                                            target_date=target_date)
-            grpc_output = stub.predict(grpc_input)
+            grpc_output = stub.trend(grpc_input)
             print(grpc_output.response)
         else:
             print("Invalid method!")

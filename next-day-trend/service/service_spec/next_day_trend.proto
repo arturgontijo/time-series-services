@@ -12,6 +12,6 @@ message Output {
     string response = 1;
 }
 
-service StockPrediction {
-    rpc predict(Input) returns (Output) {}
+service NextDayTrend {
+    rpc trend(Input) returns (Output) {}
 }

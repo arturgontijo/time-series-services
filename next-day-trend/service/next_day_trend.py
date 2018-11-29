@@ -13,7 +13,7 @@ import traceback
 
 
 logging.basicConfig(level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")
-log = logging.getLogger("stock_prediction")
+log = logging.getLogger("next_day_trend")
 
 # fix a random seed for CNTK components
 C.cntk_py.set_fixed_random_seed(1)
@@ -23,7 +23,7 @@ pd.options.mode.chained_assignment = None
 np.random.seed(123)
 
 
-class StockPrediction:
+class NextDayTrend:
     def __init__(self, source, contract, start, end, target_date):
         self.source = source
         self.contract = contract
@@ -54,7 +54,7 @@ class StockPrediction:
                 log.info("Minibatch: {0}, Loss: {1:.4f}, Error: {2:.2f}%".format(mb, training_loss, eval_error * 100))
         return mb, training_loss, eval_error
 
-    def _get_stock_data(self):
+    def _get_asset_data(self):
         retry_cnt, max_num_retry = 0, 3
 
         while retry_cnt < max_num_retry:
@@ -68,48 +68,48 @@ class StockPrediction:
         log.error("{} is not reachable".format(self.source))
         return []
 
-    def stock_prediction(self):
+    def asset_trend(self):
         try:
-            stock_data = self._get_stock_data()
+            asset_data = self._get_asset_data()
 
             # Feature name list
             predictor_names = []
 
-            if "Close" in stock_data and "Volume" in stock_data:
+            if "Close" in asset_data and "Volume" in asset_data:
                 close_tag = "Close"
                 volume_tag = "Volume"
-            elif "close" in stock_data and "volume" in stock_data:
+            elif "close" in asset_data and "volume" in asset_data:
                 close_tag = "close"
                 volume_tag = "volume"
             else:
                 return {
-                    "Error": "Couldn't find Close|Volume data"
+                    "Error": "Couldn't find Close|Volume data."
                 }
 
             # Compute price difference as a feature
-            stock_data["diff"] = np.abs(
-                (stock_data[close_tag] - stock_data[close_tag].shift(1)) / stock_data[close_tag]).fillna(0)
+            asset_data["diff"] = np.abs(
+                (asset_data[close_tag] - asset_data[close_tag].shift(1)) / asset_data[close_tag]).fillna(0)
             predictor_names.append("diff")
 
             # Compute the volume difference as a feature
-            stock_data["v_diff"] = np.abs(
-                (stock_data[volume_tag] - stock_data[volume_tag].shift(1)) / stock_data[volume_tag]).fillna(0)
+            asset_data["v_diff"] = np.abs(
+                (asset_data[volume_tag] - asset_data[volume_tag].shift(1)) / asset_data[volume_tag]).fillna(0)
             predictor_names.append("v_diff")
 
-            # Compute the stock being up (1) or down (0) over different day offsets compared to current closing price
+            # Compute the asset being up (1) or down (0) over different day offsets compared to current closing price
             num_days_back = 8
             for i in range(1, num_days_back + 1):
                 # i: number of look back days
-                stock_data["p_" + str(i)] = np.where(stock_data[close_tag] > stock_data[close_tag].shift(i), 1, 0)
+                asset_data["p_" + str(i)] = np.where(asset_data[close_tag] > asset_data[close_tag].shift(i), 1, 0)
                 predictor_names.append("p_" + str(i))
 
-            stock_data["next_day"] = np.where(stock_data[close_tag].shift(-1) > stock_data[close_tag], 1, 0)
+            asset_data["next_day"] = np.where(asset_data[close_tag].shift(-1) > asset_data[close_tag], 1, 0)
 
             # The label must be one-hot encoded
-            stock_data["next_day_opposite"] = np.where(stock_data["next_day"] == 1, 0, 1)
+            asset_data["next_day_opposite"] = np.where(asset_data["next_day"] == 1, 0, 1)
 
             # Establish the start and end date of our training timeseries
-            training_data = stock_data[self.start:self.end]
+            training_data = asset_data[self.start:self.end]
 
             training_features = np.asarray(training_data[predictor_names], dtype="float32")
             training_labels = np.asarray(training_data[["next_day", "next_day_opposite"]], dtype="float32")
@@ -167,7 +167,7 @@ class StockPrediction:
             # Now that we have trained the net, and we will do out of sample test to see how we did.
             # and then more importantly analyze how that set did
 
-            test_data = stock_data[self.target_date:self.target_date]
+            test_data = asset_data[self.target_date:self.target_date]
 
             test_features = np.ascontiguousarray(test_data[predictor_names], dtype="float32")
             test_labels = np.ascontiguousarray(test_data[["next_day", "next_day_opposite"]], dtype="float32")
@@ -193,14 +193,16 @@ class StockPrediction:
             for k, v in down_d.items():
                 prob_down = v
 
-            return {
-                "prob_up": prob_up,
-                "prob_down": prob_down
-            }
+            if float(prob_up) > float(prob_down):
+                k = "prob_up"
+                v = prob_up
+            else:
+                k = "prob_down"
+                v = prob_down
+
+            return {k: v}
 
         except Exception as e:
             traceback.print_exc()
             log.error(e)
-            return {
-                "Error": "Fail"
-            }
+            return {"Error": "Please, check our User's Guide."}
