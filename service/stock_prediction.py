@@ -5,11 +5,9 @@ import cntk as C
 import logging
 import datetime
 import numpy as np
-import os
 import pandas as pd
 # pip install git+https://github.com/pydata/pandas-datareader.git
 from pandas_datareader import data
-import pickle as pkl
 import time
 import traceback
 
@@ -78,11 +76,9 @@ class StockPrediction:
         if "Close" in stock_data and "Volume" in stock_data:
             close_tag = "Close"
             volume_tag = "Volume"
-
         elif "close" in stock_data and "volume" in stock_data:
             close_tag = "close"
             volume_tag = "volume"
-
         else:
             return {
                 "Error": "Couldn't find Close|Volume data"

@@ -33,7 +33,7 @@ if __name__ == "__main__":
         contract = input("Contract(SPY): ") if not test_flag else ""
         if contract == "":
             contract = "SPY"
-            
+
         start_date = input("Start Date(2000-01-01): ") if not test_flag else ""
         if start_date == "":
             start_date = "2018-01-01"
