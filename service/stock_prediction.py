@@ -204,8 +204,8 @@ class StockPrediction:
                 prob_down = v
 
             return {
-                "p_up": prob_up,
-                "p_down": prob_down
+                "prob_up": prob_up,
+                "prob_down": prob_down
             }
 
         except Exception as e:
