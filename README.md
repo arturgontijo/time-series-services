@@ -5,9 +5,9 @@
 
 [![CircleCI](https://circleci.com/gh/singnet/time-series-analysis.svg?style=svg)](https://circleci.com/gh/singnet/time-series-analysis)
 
-# Third Party Deep Neural Networks Model Services
+# Time Series Analysis Services
 
-A collection of services using third party DNN models.
+A collection of services using time series analysis.
 
 [HTML User's Guide Hub](https://singnet.github.io/time-series-analysis/)
 

@@ -27,9 +27,9 @@ The user must provide the following inputs in order to start the service and get
 Inputs:
   - `Source`: Source to get market data.
   - `Contract`: Label of asset (like "SPY").
-  - `Start Date`: Start date of training dataset ("2015-09-31").
-  - `End Date`: End date of training dataset ("2018-09-31").
-  - `Target Date`: Date that will be analysed ("2018-10-01").
+  - `Start Date`: Start date of training dataset ("2017-01-01").
+  - `End Date`: End date of training dataset ("2017-10-31").
+  - `Target Date`: Date that will be analysed ("2018-11-28").
 
 You can use this service from [SingularityNET DApp](http://alpha.singularitynet.io/), clicking on `SNET/ImageRecon`.
 
@@ -38,7 +38,7 @@ You can also call the service from SingularityNET CLI (`snet`).
 Assuming that you have an open channel (`id: 0`) to this service:
 
 ```
-$ snet client call 0 0.00000001 54.203.198.53:7004 flowers '{"model": "ResNet152", "img_path": "https://www.fiftyflowers.com/site_files/FiftyFlowers/Image/Product/Mini-Black-Eye-bloom-350_c7d02e72.jpg"}'
+$ snet client call 0 0.00000001 54.203.198.53:7009 trend '{"source": "yahoo", "contract": "SPY", "start_date": "2017-01-01", "end_date": "2017-10-31", "target_date": "2018-11-28"}'
 ...
 Read call params from cmdline...
 

@@ -23,7 +23,7 @@ Clone this repository:
 
 ```
 $ git clone https://github.com/singnet/time-series-analysis.git
-$ cd finance/next-day-trend
+$ cd finance/cntk-next-day-trend
 ```
 
 ### Running the service:
@@ -59,15 +59,15 @@ For example:
 $ cat snetd.config.json
 {
    "PRIVATE_KEY": "1000000000000000000000000000000000000000000000000000000000000000",
-   "DAEMON_LISTENING_PORT": 7003,
-   "DAEMON_END_POINT": "http://54.203.198.53:7003",
+   "DAEMON_LISTENING_PORT": 7009,
+   "DAEMON_END_POINT": "http://54.203.198.53:7009",
    "ETHEREUM_JSON_RPC_ENDPOINT": "https://kovan.infura.io",
    "IPFS_END_POINT": "http://ipfs.singularitynet.io:80",
    "REGISTRY_ADDRESS_KEY": "0x2e4b2f2b72402b9b2d6a7851e37c856c329afe38",
    "PASSTHROUGH_ENABLED": true,
    "PASSTHROUGH_ENDPOINT": "http://localhost:7003",
    "ORGANIZATION_NAME": "snet",
-   "SERVICE_NAME": "next-day-trend",
+   "SERVICE_NAME": "cntk-next-day-trend",
    "LOG": {
        "LEVEL": "debug",
        "OUTPUT": {
@@ -117,7 +117,7 @@ Through SingularityNET (follow this [link](https://github.com/singnet/wiki/blob/
 Assuming that you have an open channel (`id: 0`) to this service:
 
 ```
-$ snet client call 0 0.00000001 54.203.198.53:7003 trend '{"":}'
+$ snet client call 0 0.00000001 54.203.198.53:7009 trend '{"source": "yahoo", "contract": "APPL", "start_date": "2017-01-01", "end_date": "2017-10-31", "target_date": "2018-11-28"}'
 ...
 Read call params from cmdline...
 
