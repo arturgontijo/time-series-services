@@ -213,6 +213,14 @@ def main():
         print("len(training_features): ", len(training_features))
         print("len(training_labels): ", len(training_labels))
 
+        l_training_features = len(training_features)
+        training_features = training_features[:l_training_features - (l_training_features % num_minibatches)]
+        l_training_labels = len(training_labels)
+        training_labels = training_labels[:l_training_labels - (l_training_labels % num_minibatches)]
+
+        print("len(training_features): ", len(training_features))
+        print("len(training_labels): ", len(training_labels))
+
         # Train our neural network
         tf = np.split(training_features, num_minibatches)
         tl = np.split(training_labels, num_minibatches)
