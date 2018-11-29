@@ -191,8 +191,8 @@ class StockPrediction:
             test_data["p_down"] = predicted_label_prob[:, 1]
 
             return {
-                "p_up": test_data["p_up"],
-                "p_down": test_data["p_down"]
+                "p_up": str(test_data["p_up"]),
+                "p_down": str(test_data["p_down"])
             }
 
         except Exception as e:
