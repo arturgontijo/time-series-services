@@ -51,7 +51,7 @@ class StockPredictionServicer(grpc_bt_grpc.StockPredictionServicer):
                                                                self.end,
                                                                self.target_date,
                                                                self.output.response))
-        return self.output.response
+        return self.output.response.encode("utf-8")
 
 
 # The gRPC serve function.
