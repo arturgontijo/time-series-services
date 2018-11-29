@@ -70,6 +70,7 @@ class StockPrediction:
 
     def stock_prediction(self):
         stock_data = self._get_stock_data()
+        print(stock_data)
         # Feature name list
         predictor_names = []
 
@@ -165,7 +166,7 @@ class StockPrediction:
         # Now that we have trained the net, and we will do out of sample test to see how we did.
         # and then more importantly analyze how that set did
 
-        test_data = stock_data[self.target_date]
+        test_data = stock_data[self.target_date:self.target_date]
 
         test_features = np.ascontiguousarray(test_data[predictor_names], dtype="float32")
         test_labels = np.ascontiguousarray(test_data[["next_day", "next_day_opposite"]], dtype="float32")
