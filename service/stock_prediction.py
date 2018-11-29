@@ -51,7 +51,7 @@ class StockPrediction:
             training_loss = trainer.previous_minibatch_loss_average
             eval_error = trainer.previous_minibatch_evaluation_average
             if verbose:
-                print("Minibatch: {0}, Loss: {1:.4f}, Error: {2:.2f}%".format(mb, training_loss, eval_error * 100))
+                log.info("Minibatch: {0}, Loss: {1:.4f}, Error: {2:.2f}%".format(mb, training_loss, eval_error * 100))
         return mb, training_loss, eval_error
 
     def _get_stock_data(self):
@@ -71,7 +71,7 @@ class StockPrediction:
     def stock_prediction(self):
         try:
             stock_data = self._get_stock_data()
-            print(stock_data)
+
             # Feature name list
             predictor_names = []
 
@@ -143,16 +143,10 @@ class StockPrediction:
             # It is key that we make only one pass through the data linearly in time
             num_passes = 1
 
-            print("len(training_features) 1: ", len(training_features))
-            print("len(training_labels) 1: ", len(training_labels))
-
             l_training_features = len(training_features)
             training_features = training_features[:l_training_features - (l_training_features % num_minibatches)]
             l_training_labels = len(training_labels)
             training_labels = training_labels[:l_training_labels - (l_training_labels % num_minibatches)]
-
-            print("len(training_features) 2: ", len(training_features))
-            print("len(training_labels) 2: ", len(training_labels))
 
             # Train our neural network
             tf = np.split(training_features, num_minibatches)
@@ -175,15 +169,11 @@ class StockPrediction:
 
             test_data = stock_data[self.target_date:self.target_date]
 
-            print("=================TEST DATA================")
-            print(test_data)
-            print("==========================================")
-
             test_features = np.ascontiguousarray(test_data[predictor_names], dtype="float32")
             test_labels = np.ascontiguousarray(test_data[["next_day", "next_day_opposite"]], dtype="float32")
 
             avg_error = trainer.test_minibatch({net_input: test_features, label: test_labels})
-            print("Average error: {0:2.2f}%".format(avg_error * 100))
+            log.info("Average error: {0:2.2f}%".format(avg_error * 100))
 
             sm_out = C.softmax(z)
             predicted_label_prob = sm_out.eval({net_input: test_features})

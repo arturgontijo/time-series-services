@@ -27,7 +27,7 @@ class StockPredictionServicer(grpc_bt_grpc.StockPredictionServicer):
 
         self.output = ""
 
-        log.debug("StockPredictionServicer created")
+        log.info("StockPredictionServicer created")
 
     # The method that will be exposed to the snet-cli call command.
     # request: incoming data
@@ -45,7 +45,7 @@ class StockPredictionServicer(grpc_bt_grpc.StockPredictionServicer):
 
         sp = StockPrediction(self.source, self.contract, self.start, self.end, self.target_date)
         self.output.response = str(sp.stock_prediction()).encode("utf-8")
-        log.debug("stock_prediction({},{},{},{},{})={}".format(self.source,
+        log.info("stock_prediction({},{},{},{},{})={}".format(self.source,
                                                                self.contract,
                                                                self.start,
                                                                self.end,
