@@ -61,7 +61,8 @@ class StockPrediction:
 
         while retry_cnt < max_num_retry:
             try:
-                return data.DataReader(self.contract, self.source, self.start, self.end)
+                end = datetime.datetime.now()
+                return data.DataReader(self.contract, self.source, "2000-01-01", end.date())
             except:
                 retry_cnt += 1
                 time.sleep(np.random.randint(1, 10))
@@ -74,27 +75,42 @@ class StockPrediction:
         # Feature name list
         predictor_names = []
 
+        if "Close" in stock_data and "Volume" in stock_data:
+            close_tag = "Close"
+            volume_tag = "Volume"
+
+        elif "close" in stock_data and "volume" in stock_data:
+            close_tag = "close"
+            volume_tag = "volume"
+
+        else:
+            return {
+                "Error": "Couldn't find Close|Volume data"
+            }
+
         # Compute price difference as a feature
-        stock_data["diff"] = np.abs((stock_data["Close"] - stock_data["Close"].shift(1)) / stock_data["Close"]).fillna(0)
+        stock_data["diff"] = np.abs(
+            (stock_data[close_tag] - stock_data[close_tag].shift(1)) / stock_data[close_tag]).fillna(0)
         predictor_names.append("diff")
 
         # Compute the volume difference as a feature
-        stock_data["v_diff"] = np.abs((stock_data["Volume"] - stock_data["Volume"].shift(1)) / stock_data["Volume"]).fillna(0)
+        stock_data["v_diff"] = np.abs(
+            (stock_data[volume_tag] - stock_data[volume_tag].shift(1)) / stock_data[volume_tag]).fillna(0)
         predictor_names.append("v_diff")
 
-        # Compute the stock being up (1) or down (0) over different day offsets compared to current dat closing price
+        # Compute the stock being up (1) or down (0) over different day offsets compared to current closing price
         num_days_back = 8
-
         for i in range(1, num_days_back + 1):
             # i: number of look back days
-            stock_data["p_" + str(i)] = np.where(stock_data["Close"] > stock_data["Close"].shift(i), 1, 0)
+            stock_data["p_" + str(i)] = np.where(stock_data[close_tag] > stock_data[close_tag].shift(i), 1, 0)
             predictor_names.append("p_" + str(i))
 
-        stock_data["next_day"] = np.where(stock_data["Close"].shift(-1) > stock_data["Close"], 1, 0)
+        stock_data["next_day"] = np.where(stock_data[close_tag].shift(-1) > stock_data[close_tag], 1, 0)
+
         # The label must be one-hot encoded
         stock_data["next_day_opposite"] = np.where(stock_data["next_day"] == 1, 0, 1)
 
-        # Establish the start and end date of our training timeseries (picked 2000 days before the market crash)
+        # Establish the start and end date of our training timeseries
         training_data = stock_data[self.start:self.end]
 
         training_features = np.asarray(training_data[predictor_names], dtype="float32")
@@ -129,6 +145,11 @@ class StockPrediction:
         # It is key that we make only one pass through the data linearly in time
         num_passes = 1
 
+        l_training_features = len(training_features)
+        training_features = training_features[:l_training_features - (l_training_features % num_minibatches)]
+        l_training_labels = len(training_labels)
+        training_labels = training_labels[:l_training_labels - (l_training_labels % num_minibatches)]
+
         # Train our neural network
         tf = np.split(training_features, num_minibatches)
         tl = np.split(training_labels, num_minibatches)
@@ -148,7 +169,7 @@ class StockPrediction:
         # Now that we have trained the net, and we will do out of sample test to see how we did.
         # and then more importantly analyze how that set did
 
-        test_data = stock_data[self.target_date:self.target_date]
+        test_data = stock_data[self.target_date]
 
         test_features = np.ascontiguousarray(test_data[predictor_names], dtype="float32")
         test_labels = np.ascontiguousarray(test_data[["next_day", "next_day_opposite"]], dtype="float32")
@@ -160,14 +181,12 @@ class StockPrediction:
         predicted_label_prob = out.eval({net_input: test_features})
         test_data["p_up"] = pd.Series(predicted_label_prob[:, 0], index=test_data.index)
         test_data["p_down"] = predicted_label_prob[:, 1]
-        test_data['long_entries'] = np.where((test_data.p_up > 0.55), 1, 0)
-        test_data['short_entries'] = np.where((test_data.p_down > 0.55), -1, 0)
-        test_data['positions'] = test_data['long_entries'].fillna(0) + test_data['short_entries'].fillna(0)
+        test_data['positions'] = test_data["long_entries"].fillna(0) + test_data["short_entries"].fillna(0)
+        test_data["pnl"] = test_data[close_tag].diff().shift(-1).fillna(0) * test_data["positions"] / np.where(
+            test_data[close_tag] != 0, test_data[close_tag], 1)
+        test_data["perc"] = (test_data[close_tag] - test_data[close_tag].shift(1)) / test_data[close_tag].shift(1)
 
-        test_data["pnl"] = test_data["Close"].diff().shift(-1).fillna(0) * test_data["positions"] / np.where(
-            test_data["Close"] != 0, test_data["Close"], 1)
-        test_data["perc"] = (test_data["Close"] - test_data["Close"].shift(1)) / test_data["Close"].shift(1)
-
-        print(test_data)
-
-
+        return {
+            "p_up": test_data["p_up"],
+            "p_down": test_data["p_down"]
+        }

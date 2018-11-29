@@ -45,11 +45,12 @@ class StockPredictionServicer(grpc_bt_grpc.StockPredictionServicer):
 
         sp = StockPrediction(self.source, self.contract, self.start, self.end, self.target_date)
         self.output.response = sp.stock_prediction()
-        log.debug("stock_prediction({},{})={}".format(self.source,
-                                                      self.contract,
-                                                      self.start,
-                                                      self.end,
-                                                      self.target_date))
+        log.debug("stock_prediction({},{},{},{},{})={}".format(self.source,
+                                                               self.contract,
+                                                               self.start,
+                                                               self.end,
+                                                               self.target_date,
+                                                               self.output.response))
         return self.output.response
 
 
@@ -63,7 +64,7 @@ class StockPredictionServicer(grpc_bt_grpc.StockPredictionServicer):
 # (from generated .py files by protobuf compiler)
 def serve(max_workers=10, port=7777):
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=max_workers))
-    grpc_bt_grpc.add_AdditionServicer_to_server(StockPredictionServicer(), server)
+    grpc_bt_grpc.add_StockPredictionServicer_to_server(StockPredictionServicer(), server)
     server.add_insecure_port("[::]:{}".format(port))
     return server
 
