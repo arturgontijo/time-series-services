@@ -131,7 +131,7 @@ class StockPrediction:
             trainer = C.Trainer(z, (loss, label_error), [C.sgd(z.parameters, lr=lr_per_minibatch)])
 
             # Initialize the parameters for the trainer, we will train in large minibatches in sequential order
-            minibatch_size = 100
+            minibatch_size = 10
             num_minibatches = len(training_data.index) // minibatch_size
 
             # Run the trainer on and perform model training
@@ -200,6 +200,7 @@ class StockPrediction:
 
         except Exception as e:
             traceback.print_exc()
+            log.error(e)
             return {
-                "Error": str(e)
+                "Error": "Fail"
             }
