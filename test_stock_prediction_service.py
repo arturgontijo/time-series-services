@@ -2,10 +2,10 @@ import sys
 import grpc
 
 # import the generated classes
-from .service.service_spec import stock_prediction_pb2_grpc as grpc_bt_grpc
-from .service.service_spec import stock_prediction_pb2 as grpc_bt_pb2
+from service.service_spec import stock_prediction_pb2_grpc as grpc_bt_grpc
+from service.service_spec import stock_prediction_pb2 as grpc_bt_pb2
 
-from .service import registry
+from service import registry
 
 if __name__ == "__main__":
 

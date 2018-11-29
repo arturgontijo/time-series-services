@@ -6,7 +6,7 @@ import sys
 import logging
 import threading
 
-from .service import registry
+from service import registry
 
 logging.basicConfig(level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")
 log = logging.getLogger("run_stock_prediction_service")

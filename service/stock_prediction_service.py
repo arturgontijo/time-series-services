@@ -4,12 +4,12 @@ import logging
 import grpc
 import concurrent.futures as futures
 
-from . import common
-from .stock_prediction import StockPrediction
+from service import common
+from stock_prediction import StockPrediction
 
 # Importing the generated codes from buildproto.sh
-from .service_spec import stock_prediction_pb2_grpc as grpc_bt_grpc
-from .service_spec.stock_prediction_pb2 import Output
+from service_spec import stock_prediction_pb2_grpc as grpc_bt_grpc
+from service_spec.stock_prediction_pb2 import Output
 
 logging.basicConfig(level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")
 log = logging.getLogger("stock_prediction_service")
