@@ -25,11 +25,12 @@ The service outputs a top 5 prediction list (ordered by confidence) based on the
 The user must provide the following inputs in order to start the service and get a response:
 
 Inputs:
-  - `Source`: Source to get market data.
-  - `Contract`: Label of asset (like "SPY").
-  - `Start Date`: Start date of training dataset ("2017-01-01").
-  - `End Date`: End date of training dataset ("2017-10-31").
-  - `Target Date`: Date that will be analysed ("2018-11-28").
+  - `source`: Source to get market data (ie. yahoo, check this [link](https://github.com/pydata/pandas-datareader/blob/master/pandas_datareader/data.py#L306)).
+  - `contract`: Label of asset (like "SPY").
+  - `start_date`: Start date of training dataset.
+  - `end_date`: End date of training dataset.
+  - `target_date`: Date that will be analysed.
+  - The date delta must be >= 100 days.
 
 You can use this service from [SingularityNET DApp](http://alpha.singularitynet.io/), clicking on `SNET/ImageRecon`.
 

@@ -17,11 +17,15 @@ A collection of services using time series analysis.
 For more details on how to publish and test a service, select it from the list below:
 
 ### Finance:
-- [cntk-next-day-trend](finance/cntk-next-day-trend) ([User's Guide](docs/users_guide/finance/cntk-next-day-trend.md)) - This service uses ResNet152 model, trained to recognize different types of flowers and dog breeds. [[Reference](https://cntk.ai/pythondocs/CNTK_301_Image_Recognition_with_Deep_Transfer_Learning.html)]
+- [cntk-next-day-trend](finance/cntk-next-day-trend) ([User's Guide](docs/users_guide/finance/cntk-next-day-trend.md)) - 
+This service uses a CNTK MLP to predict whether or not, for an input date, market will be above or below the previous day.
+[[Reference](https://cntk.ai/pythondocs/CNTK_301_Image_Recognition_with_Deep_Transfer_Learning.html)]
 
 ## Contributing and Reporting Issues
 
-Please read our [guidelines](https://github.com/singnet/wiki/blob/master/guidelines/CONTRIBUTING.md#submitting-an-issue) before submitting an issue. If your issue is a bug, please use the bug template pre-populated [here][issue-template]. For feature requests and queries you can use [this template][feature-template].
+Please read our [guidelines](https://github.com/singnet/wiki/blob/master/guidelines/CONTRIBUTING.md#submitting-an-issue) 
+before submitting an issue. If your issue is a bug, please use the bug template pre-populated [here][issue-template]. 
+For feature requests and queries you can use [this template][feature-template].
 
 ## Authors
 

@@ -6,7 +6,9 @@
 # CNTK Finance Time Series Analysis
 
 This service uses [CNTK Finance Timeseries](https://github.com/Microsoft/CNTK/blob/master/Tutorials/CNTK_104_Finance_Timeseries_Basic_with_Pandas_Numpy.ipynb) 
-to perform a time series analysis.
+to predict whether or not, for an input date, market will be above or below the previous day.
+[[Reference](https://cntk.ai/pythondocs/CNTK_301_Image_Recognition_with_Deep_Transfer_Learning.html)]
+
 
 It is part of our third party [Time Series Analysis Services](https://github.com/singnet/time-series-analysis).
 
@@ -36,12 +38,12 @@ Create the `SNET Daemon`'s config JSON file (`snetd.config.json`).
 {
    "PRIVATE_KEY": "1000000000000000000000000000000000000000000000000000000000000000",
    "DAEMON_LISTENING_PORT": DAEMON_PORT,
-   "DAEMON_END_POINT": "DAEMON_IP:DAEMON_PORT",
+   "DAEMON_END_POINT": "DAEMON_HOST:DAEMON_PORT",
    "ETHEREUM_JSON_RPC_ENDPOINT": "https://kovan.infura.io",
    "IPFS_END_POINT": "http://ipfs.singularitynet.io:80",
    "REGISTRY_ADDRESS_KEY": "0x2e4b2f2b72402b9b2d6a7851e37c856c329afe38",
    "PASSTHROUGH_ENABLED": true,
-   "PASSTHROUGH_ENDPOINT": "SERVICE_GRPC_IP:SERVICE_GRPC_PORT",  
+   "PASSTHROUGH_ENDPOINT": "SERVICE_GRPC_HOST:SERVICE_GRPC_PORT",  
    "ORGANIZATION_NAME": "ORGANIZATION_NAME",
    "SERVICE_NAME": "SERVICE_NAME",
    "LOG": {
@@ -92,11 +94,12 @@ $ python3 run_next_day_trend_service.py
 ### Calling the service:
 
 Inputs:
-  - `Source`: Source to get market data (ie. yahoo, check this [link](https://github.com/pydata/pandas-datareader/blob/master/pandas_datareader/data.py#L306)).
-  - `Contract`: Label of asset (like "SPY").
-  - `Start Date`: Start date of training dataset.
-  - `End Date`: End date of training dataset.
-  - `Target Date`: Date that will be analysed.
+  - `source`: Source to get market data (ie. yahoo, check this [link](https://github.com/pydata/pandas-datareader/blob/master/pandas_datareader/data.py#L306)).
+  - `contract`: Label of asset (like "SPY").
+  - `start_date`: Start date of training dataset.
+  - `end_date`: End date of training dataset.
+  - `target_date`: Date that will be analysed.
+  - The date delta must be >= 100 days.
 
 Local (testing purpose):
 
@@ -109,10 +112,11 @@ Contract(SPY): AMZN
 Start Date(2000-01-01): 2017-01-01
 End Date(2009-01-01): 2017-11-28
 Target Date(2018-11-12): 2018-11-28
-{'prob_up': 0.5287243723869324}
+{'UP': 0.53}
 ```
 
-Through SingularityNET (follow this [link](https://github.com/singnet/wiki/blob/master/tutorials/howToPublishService/README.md) to learn how to publish a service and open a payment channel to be able to call it):
+Through SingularityNET (follow this [link](https://github.com/singnet/wiki/blob/master/tutorials/howToPublishService/README.md) 
+to learn how to publish a service and open a payment channel to be able to call it):
 
 Assuming that you have an open channel (`id: 0`) to this service:
 
@@ -124,14 +128,14 @@ Read call params from cmdline...
 Calling service...
 
     response:
-        delta_time: '1.5536'
-        top_5: '{1: ''98.93%: sunflower'', 2: ''00.64%: black-eyed susan'', 3: ''00.16%:
-            barbeton daisy'', 4: ''00.14%: oxeye daisy'', 5: ''00.03%: daffodil''}'
+        {'DOWN': 0.48}
 ```
 
 ## Contributing and Reporting Issues
 
-Please read our [guidelines](https://github.com/singnet/wiki/blob/master/guidelines/CONTRIBUTING.md#submitting-an-issue) before submitting an issue. If your issue is a bug, please use the bug template pre-populated [here][issue-template]. For feature requests and queries you can use [this template][feature-template].
+Please read our [guidelines](https://github.com/singnet/wiki/blob/master/guidelines/CONTRIBUTING.md#submitting-an-issue) before submitting an issue. 
+If your issue is a bug, please use the bug template pre-populated [here][issue-template]. 
+For feature requests and queries you can use [this template][feature-template].
 
 ## Authors
 

@@ -194,11 +194,11 @@ class NextDayTrend:
                 prob_down = v
 
             if float(prob_up) > float(prob_down):
-                k = "prob_up"
-                v = prob_up
+                k = "UP"
+                v = round(prob_up, 2)
             else:
-                k = "prob_down"
-                v = prob_down
+                k = "DOWN"
+                v = round(prob_down, 2)
 
             return {k: v}
 
