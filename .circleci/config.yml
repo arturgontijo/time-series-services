@@ -1,191 +1,43 @@
 version: 2
 jobs:
-  deploy-cntk-image-recon:
+  deploy-cntk-next-day-trend:
     docker:
     - image: circleci/python:3.6.6-node
     working_directory: ~/singnet
     environment:
-      SERVICE_NAME: cntk-image-recon
-      SERVICE_RUN_SCRIPT: run_image_recon_service.py
-      SERVICE_TEST_SCRIPT: test_image_recon_service.py
-      SNETD_PORT: 7004
+      SERVICE_NAME: cntk-next-day-trend
+      SERVICE_RUN_SCRIPT: run_next-day-trend_service.py
+      SERVICE_TEST_SCRIPT: test_next-day-trend_service.py
+      SNETD_PORT: 7009
     steps:
     - run:
         name: Deploy Over SSH
         command: |
           ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker stop $DOCKER_CONTAINER_NAME_CNTK || true && nvidia-docker rename $DOCKER_CONTAINER_NAME_CNTK ${DOCKER_CONTAINER_NAME_CNTK}_old || true
+            nvidia-docker stop $DOCKER_CONTAINER_NAME_CNTK_TSNDT || true && nvidia-docker rename $DOCKER_CONTAINER_NAME_CNTK_TSNDT ${DOCKER_CONTAINER_NAME_CNTK_TSNDT}_old || true
             nvidia-docker build \
-              -t $DOCKER_IMAGE_NAME_CNTK https://github.com/singnet/dnn-model-services.git#master:/Services/gRPC/$SERVICE_NAME
+              -t $DOCKER_IMAGE_NAME_CNTK_TSNDT https://github.com/singnet/dnn-model-services.git#master:/Services/gRPC/$SERVICE_NAME
             nvidia-docker run --runtime=nvidia \
-              --name $DOCKER_CONTAINER_NAME_CNTK \
+              --name $DOCKER_CONTAINER_NAME_CNTK_TSNDT \
               --restart unless-stopped \
               -p $SNETD_PORT:$SNETD_PORT \
-              -di $DOCKER_IMAGE_NAME_CNTK sh -c "git pull;python3 $SERVICE_RUN_SCRIPT"
+              -di $DOCKER_IMAGE_NAME_CNTK_TSNDT sh -c "git pull;python3 $SERVICE_RUN_SCRIPT"
           EOF
     - run:
         name: Remove Old Docker Container
         command: |
           ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker stop ${DOCKER_CONTAINER_NAME_CNTK}_old || true && nvidia-docker rm ${DOCKER_CONTAINER_NAME_CNTK}_old || true
+            nvidia-docker stop ${DOCKER_CONTAINER_NAME_CNTK_TSNDT}_old || true && nvidia-docker rm ${DOCKER_CONTAINER_NAME_CNTK_TSNDT}_old || true
           EOF
     - run:
         name: Test local
         command: |
           ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker exec -i $DOCKER_CONTAINER_NAME_CNTK python3 $SERVICE_TEST_SCRIPT test
-          EOF
-
-  deploy-i3d-video-action-recognition:
-    docker:
-    - image: circleci/python:3.6.6-node
-    working_directory: ~/singnet
-    environment:
-      SERVICE_NAME: i3d-video-action-recognition
-      SERVICE_RUN_SCRIPT: run_video_action_recon_service.py
-      SERVICE_TEST_SCRIPT: test_video_action_recon_service.py
-      SNETD_PORT: 7005
-    steps:
-    - run:
-        name: Deploy Over SSH
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker stop $DOCKER_CONTAINER_NAME_I3D || true && nvidia-docker rename $DOCKER_CONTAINER_NAME_I3D ${DOCKER_CONTAINER_NAME_I3D}_old || true
-            nvidia-docker build \
-              -t $DOCKER_IMAGE_NAME_I3D https://github.com/singnet/dnn-model-services.git#master:/Services/gRPC/$SERVICE_NAME
-            nvidia-docker run --runtime=nvidia \
-              --name $DOCKER_CONTAINER_NAME_I3D \
-              --restart unless-stopped \
-              -p $SNETD_PORT:$SNETD_PORT \
-              -di $DOCKER_IMAGE_NAME_I3D sh -c "git pull;python3 $SERVICE_RUN_SCRIPT"
-          EOF
-    - run:
-        name: Remove Old Docker Container
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker stop ${DOCKER_CONTAINER_NAME_I3D}_old || true && nvidia-docker rm ${DOCKER_CONTAINER_NAME_I3D}_old || true
-          EOF
-    - run:
-        name: Test local
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker exec -i $DOCKER_CONTAINER_NAME_I3D python3 $SERVICE_TEST_SCRIPT test
-          EOF
-
-  deploy-object-detection-image-recon:
-    docker:
-    - image: circleci/python:3.6.6-node
-    working_directory: ~/singnet
-    environment:
-      SERVICE_NAME: meta-services/object-detection-image-recon
-      SERVICE_RUN_SCRIPT: run_ObjectDetection_ImageRecon_service.py
-      SERVICE_TEST_SCRIPT: test_ObjectDetection_ImageRecon_service.py
-      SNETD_PORT: 7006
-    steps:
-    - run:
-        name: Deploy Over SSH
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker stop $DOCKER_CONTAINER_NAME_META || true && nvidia-docker rename $DOCKER_CONTAINER_NAME_META ${DOCKER_CONTAINER_NAME_META}_old || true
-            nvidia-docker build \
-              -t $DOCKER_IMAGE_NAME_META https://github.com/singnet/dnn-model-services.git#master:/Services/gRPC/$SERVICE_NAME
-            nvidia-docker run --runtime=nvidia \
-              --name $DOCKER_CONTAINER_NAME_META \
-              --restart unless-stopped \
-              -p $SNETD_PORT:$SNETD_PORT \
-              -di $DOCKER_IMAGE_NAME_META sh -c "git pull;python3 $SERVICE_RUN_SCRIPT"
-          EOF
-    - run:
-        name: Remove Old Docker Container
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker stop ${DOCKER_CONTAINER_NAME_META}_old || true && nvidia-docker rm ${DOCKER_CONTAINER_NAME_META}_old || true
-          EOF
-    - run:
-        name: Test local
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker exec -i $DOCKER_CONTAINER_NAME_META python3 $SERVICE_TEST_SCRIPT test
-          EOF
-
-  deploy-s2vt-video-captioning:
-    docker:
-    - image: circleci/python:3.6.6-node
-    working_directory: ~/singnet
-    environment:
-      SERVICE_NAME: s2vt-video-captioning
-      SERVICE_RUN_SCRIPT: run_video_cap_service.py
-      SERVICE_TEST_SCRIPT: test_video_cap_service.py
-      SNETD_PORT: 7007
-    steps:
-    - run:
-        name: Deploy Over SSH
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker stop $DOCKER_CONTAINER_NAME_S2VT || true && nvidia-docker rename $DOCKER_CONTAINER_NAME_S2VT ${DOCKER_CONTAINER_NAME_S2VT}_old || true
-            nvidia-docker build \
-              -t $DOCKER_IMAGE_NAME_S2VT https://github.com/singnet/dnn-model-services.git#master:/Services/gRPC/$SERVICE_NAME
-            nvidia-docker run --runtime=nvidia \
-              --name $DOCKER_CONTAINER_NAME_S2VT \
-              --restart unless-stopped \
-              -p $SNETD_PORT:$SNETD_PORT \
-              -di $DOCKER_IMAGE_NAME_S2VT sh -c "git pull;python $SERVICE_RUN_SCRIPT"
-          EOF
-    - run:
-        name: Remove Old Docker Container
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker stop ${DOCKER_CONTAINER_NAME_S2VT}_old || true && nvidia-docker rm ${DOCKER_CONTAINER_NAME_S2VT}_old || true
-          EOF
-    - run:
-        name: Test local
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker exec -i $DOCKER_CONTAINER_NAME_S2VT python $SERVICE_TEST_SCRIPT test
-          EOF
-
-  deploy-yolov3-object-detection:
-    docker:
-    - image: circleci/python:3.6.6-node
-    working_directory: ~/singnet
-    environment:
-      SERVICE_NAME: yolov3-object-detection
-      SERVICE_RUN_SCRIPT: run_object_detection_service.py
-      SERVICE_TEST_SCRIPT: test_object_detection_service.py
-      SNETD_PORT: 7008
-    steps:
-    - run:
-        name: Deploy Over SSH
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker stop $DOCKER_CONTAINER_NAME_YOLOv3 || true && nvidia-docker rename $DOCKER_CONTAINER_NAME_YOLOv3 ${DOCKER_CONTAINER_NAME_YOLOv3}_old || true
-            nvidia-docker build \
-              -t $DOCKER_IMAGE_NAME_YOLOv3 https://github.com/singnet/dnn-model-services.git#master:/Services/gRPC/$SERVICE_NAME
-            nvidia-docker run --runtime=nvidia \
-              --name $DOCKER_CONTAINER_NAME_YOLOv3 \
-              --restart unless-stopped \
-              -p $SNETD_PORT:$SNETD_PORT \
-              -di $DOCKER_IMAGE_NAME_YOLOv3 sh -c "git pull;python3 $SERVICE_RUN_SCRIPT"
-          EOF
-    - run:
-        name: Remove Old Docker Container
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker stop ${DOCKER_CONTAINER_NAME_YOLOv3}_old || true && nvidia-docker rm ${DOCKER_CONTAINER_NAME_YOLOv3}_old || true
-          EOF
-    - run:
-        name: Test local
-        command: |
-          ssh -o "StrictHostKeyChecking no" $SSH_USER@$SSH_HOST << EOF
-            nvidia-docker exec -i $DOCKER_CONTAINER_NAME_YOLOv3 python3 $SERVICE_TEST_SCRIPT test
+            nvidia-docker exec -i $DOCKER_CONTAINER_NAME_CNTK_TSNDT python3 $SERVICE_TEST_SCRIPT test
           EOF
 
 workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - deploy-cntk-image-recon
-      - deploy-i3d-video-action-recognition
-      #- deploy-object-detection-image-recon
-      - deploy-s2vt-video-captioning
-      - deploy-yolov3-object-detection
+      - deploy-cntk-next-day-tren

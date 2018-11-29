@@ -9,7 +9,7 @@
 
 A collection of services using third party DNN models.
 
-[HTML User's Guide Hub](https://singnet.github.io/dnn-model-services/)
+[HTML User's Guide Hub](https://singnet.github.io/time-series-analysis/)
 
 
 ## Getting Started

@@ -32,7 +32,7 @@ To get the `ORGANIZATION_NAME` and `SERVICE_NAME` you must have already publishe
 
 Create the `SNET Daemon`'s config JSON file (`snetd.config.json`).
 
-```json
+```
 {
    "PRIVATE_KEY": "1000000000000000000000000000000000000000000000000000000000000000",
    "DAEMON_LISTENING_PORT": DAEMON_PORT,
