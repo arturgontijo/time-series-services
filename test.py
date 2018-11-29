@@ -206,8 +206,8 @@ def main():
         # It is key that we make only one pass through the data linearly in time
         num_passes = 1
 
-        print("len(training_features): ", training_features)
-        print("len(training_labels): ", training_labels)
+        print("len(training_features): ", len(training_features))
+        print("len(training_labels): ", len(training_labels))
 
         # Train our neural network
         tf = np.split(training_features, num_minibatches)
@@ -236,8 +236,8 @@ def main():
         test_features = np.ascontiguousarray(test_data[predictor_names], dtype="float32")
         test_labels = np.ascontiguousarray(test_data[["next_day", "next_day_opposite"]], dtype="float32")
 
-        print("len(test_features): ", test_features)
-        print("len(test_labels): ", test_labels)
+        print("len(test_features): ", len(test_features))
+        print("len(test_labels): ", len(test_labels))
 
         avg_error = trainer.test_minibatch({net_input: test_features, label: test_labels})
         print("Average error: {0:2.2f}%".format(avg_error * 100))
