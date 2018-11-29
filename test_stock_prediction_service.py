@@ -54,7 +54,7 @@ if __name__ == "__main__":
                                            end=end_date,
                                            target_date=target_date)
             grpc_output = stub.predict(grpc_input)
-            print(grpc_input.response)
+            print(grpc_output.response)
         else:
             print("Invalid method!")
 

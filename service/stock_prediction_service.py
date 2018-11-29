@@ -44,14 +44,14 @@ class StockPredictionServicer(grpc_bt_grpc.StockPredictionServicer):
         self.output = Output()
 
         sp = StockPrediction(self.source, self.contract, self.start, self.end, self.target_date)
-        self.output.response = sp.stock_prediction()
+        self.output.response = str(sp.stock_prediction()).encode("utf-8")
         log.debug("stock_prediction({},{},{},{},{})={}".format(self.source,
                                                                self.contract,
                                                                self.start,
                                                                self.end,
                                                                self.target_date,
                                                                self.output.response))
-        return self.output.response.encode("utf-8")
+        return self.output
 
 
 # The gRPC serve function.

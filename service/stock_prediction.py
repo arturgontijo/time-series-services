@@ -190,9 +190,22 @@ class StockPrediction:
             test_data["p_up"] = pd.Series(predicted_label_prob[:, 0], index=test_data.index)
             test_data["p_down"] = predicted_label_prob[:, 1]
 
+            d = test_data.to_dict()
+
+            prob_up = "Fail"
+            prob_down = "Fail"
+
+            up_d = d["p_up"]
+            for k, v in up_d.items():
+                prob_up = v
+
+            down_d = d["p_down"]
+            for k, v in down_d.items():
+                prob_down = v
+
             return {
-                "p_up": str(test_data["p_up"]),
-                "p_down": str(test_data["p_down"])
+                "p_up": prob_up,
+                "p_down": prob_down
             }
 
         except Exception as e:
