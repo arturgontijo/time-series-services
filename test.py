@@ -50,7 +50,7 @@ def is_test(): return envvar in os.environ
 
 def download(file_name):
     try:
-        ts_data = get_stock_data("yahoo", "SPY", 2000, 1, 2, 2017, 1, 1)
+        ts_data = get_stock_data("yahoo", "SPY", 2000, 1, 2, 2018, 11, 1)
     except:
         raise Exception("Data could not be downloaded")
 
@@ -168,13 +168,13 @@ def main():
         ts_data["next_day_opposite"] = np.where(ts_data["next_day"] == 1, 0, 1)  # The label must be one-hot encoded
 
         # Establish the start and end date of our training timeseries (picked 2000 days before the market crash)
-        training_data = ts_data["2001-02-05":"2009-01-20"]
+        training_data = ts_data["2016-02-05":"2018-09-20"]
 
         # We define our test data as: data["2008-01-02":]
         # This example allows to include data up to current date
 
         # test_data = ts_data["2009-01-20":"2018-10-31"]
-        test_data = ts_data["2018-11-12":"2018-11-20"]
+        test_data = ts_data["2018-10-12":"2018-10-20"]
         training_features = np.asarray(training_data[predictor_names], dtype="float32")
         training_labels = np.asarray(training_data[["next_day", "next_day_opposite"]], dtype="float32")
 
@@ -206,6 +206,9 @@ def main():
         # It is key that we make only one pass through the data linearly in time
         num_passes = 1
 
+        print("len(training_features): ", training_features)
+        print("len(training_labels): ", training_labels)
+
         # Train our neural network
         tf = np.split(training_features, num_minibatches)
         tl = np.split(training_labels, num_minibatches)
@@ -232,6 +235,9 @@ def main():
 
         test_features = np.ascontiguousarray(test_data[predictor_names], dtype="float32")
         test_labels = np.ascontiguousarray(test_data[["next_day", "next_day_opposite"]], dtype="float32")
+
+        print("len(test_features): ", test_features)
+        print("len(test_labels): ", test_labels)
 
         avg_error = trainer.test_minibatch({net_input: test_features, label: test_labels})
         print("Average error: {0:2.2f}%".format(avg_error * 100))
