@@ -6,7 +6,7 @@ import sys
 import logging
 import threading
 
-from service import registry
+from .service import registry
 
 logging.basicConfig(level=10, format="%(asctime)s - [%(levelname)8s] - %(name)s - %(message)s")
 log = logging.getLogger("run_stock_prediction_service")
@@ -38,12 +38,12 @@ def start_all_services(cwd, service_modules):
     """
     Loop through all service_modules and start them.
     For each one, an instance of Daemon "snetd" is created.
-    snetd will start with configs from "snet.config.json"
+    snetd will start with configs from "snetd.config.json"
     """
     try:
         for i, service_module in enumerate(service_modules):
             service_name = service_module.split(".")[-1]
-            log.info("Launching", service_module, "on ports", str(registry[service_name]))
+            log.info("Launching {} on port {}".format(str(registry[service_name]), service_module))
 
             process_th = threading.Thread(target=start_service, args=(cwd, service_module))
 
