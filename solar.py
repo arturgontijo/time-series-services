@@ -203,9 +203,15 @@ def main():
         print("Loading existent model {}...".format(model_file))
         z = C.load_model(model_file)
 
+    # Print out all layers in the model
+    print('Loading {} and printing all layers:'.format(model_file))
+    node_outputs = C.logging.get_node_outputs(C.load_model(model_file))
+    for n in node_outputs:
+        print("  {0} {1}".format(n.name, n.shape))
+
     # predict
     fig = plt.figure()
-    a = fig.add_subplot(2, 1, figsize=(12, 8))
+    a = [fig.add_subplot(2, 1, 1), fig.add_subplot(2, 1, 1)]
     # f, a = plt.subplots(2, 1, figsize=(12, 8))
     for j, ds in enumerate(["val", "test"]):
         results = []
