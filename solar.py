@@ -203,8 +203,6 @@ def main():
         print("Loading existent model {}...".format(model_file))
         z = C.load_model(model_file)
 
-    out = C.softmax(z)
-
     # Print out all layers in the model
     print('Loading {} and printing all layers:'.format(model_file))
     node_outputs = C.logging.get_node_outputs(z)
@@ -218,7 +216,8 @@ def main():
         a = fig.add_subplot(2, 1, 1)
         results = []
         for x_batch, _ in next_batch(X, Y, ds, BATCH_SIZE):
-            pred = out.eval({x: x_batch})
+            print("=================={}========================".format({x: x_batch}))
+            pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
         # because we normalized the input data we need to multiply the prediction
         # with SCALER to get the real values.
