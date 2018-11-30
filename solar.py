@@ -194,7 +194,7 @@ def main():
 
         print("Training took {:.1f} sec".format(time.time() - start))
 
-        # Print the train and validation errors
+        # Print the train, validation and test errors
         for labeltxt in ["train", "val", "test"]:
             print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, x, X, Y, BATCH_SIZE, var_l, labeltxt)))
 
@@ -216,11 +216,8 @@ def main():
         a = fig.add_subplot(2, 1, 1)
         results = []
         for x_batch, _ in next_batch(X, Y, ds, BATCH_SIZE):
-            try:
-                pred = z.eval({x: x_batch})
-                results.extend(pred[:, 0])
-            except Exception as e:
-                print(e)
+            pred = z.eval({x: x_batch})
+            results.extend(pred[:, 0])
         # because we normalized the input data we need to multiply the prediction
         # with SCALER to get the real values.
         a.plot((Y[ds] * NORMALIZE).flatten(), label=ds + ' raw')
