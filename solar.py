@@ -1,5 +1,5 @@
-import matplotlib as mpl
-mpl.use('Agg')
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -217,7 +217,7 @@ def main():
         a[j].plot(np.array(results) * NORMALIZE, label=ds + ' pred')
         a[j].legend()
 
-    fig.savefig("output_chart.jpg")
+    a.savefig("output_chart.jpg")
 
 
 if __name__ == "__main__":
