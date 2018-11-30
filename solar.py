@@ -121,6 +121,15 @@ def create_model(x, h_dims):
         return m
 
 
+# validate
+def get_mse(trainer, x, y, batch_size, label, labeltxt):
+    result = 0.0
+    for x1, y1 in next_batch(x, y, labeltxt, batch_size):
+        eval_error = trainer.test_minibatch({x: x1, label: y1})
+        result += eval_error
+    return result/len(x[labeltxt])
+
+
 def main():
     # We keep upto 14 inputs from a day
     TIMESTEPS = 14
@@ -178,6 +187,26 @@ def main():
             print("epoch: {}, loss: {:.4f}".format(epoch, training_loss))
 
     print("Training took {:.1f} sec".format(time.time() - start))
+
+    # Print the train and validation errors
+    for labeltxt in ["train", "val", "test"]:
+        print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, X, Y, BATCH_SIZE, label, labeltxt)))
+
+    # predict
+    f, a = plt.subplots(2, 1, figsize=(12, 8))
+    for j, ds in enumerate(["val", "test"]):
+        results = []
+        for x_batch, _ in next_batch(X, Y, ds, BATCH_SIZE):
+            pred = z.eval({x: x_batch})
+            results.extend(pred[:, 0])
+        # because we normalized the input data we need to multiply the prediction
+        # with SCALER to get the real values.
+        a[j].plot((Y[ds] * NORMALIZE).flatten(), label=ds + ' raw')
+        a[j].plot(np.array(results) * NORMALIZE, label=ds + ' pred')
+        a[j].legend()
+
+    a.savefig("chart_a.jpg")
+    f.savefig("chart_f.jpg")
 
 
 if __name__ == "__main__":
