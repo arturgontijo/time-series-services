@@ -159,33 +159,33 @@ def main():
 
     model_file = "solar_{}_epochs.model".format(EPOCHS)
 
+    print("Training model {}...".format(model_file))
+
+    # create the model
+    z = create_model(x, H_DIMS)
+
+    # expected output (label), also the dynamic axes of the model output
+    # is specified as the model of the label input
+    var_l = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
+
+    # the learning rate
+    learning_rate = 0.005
+    lr_schedule = C.learning_parameter_schedule(learning_rate)
+
+    # loss function
+    loss = C.squared_error(z, var_l)
+
+    # use squared error to determine error for now
+    error = C.squared_error(z, var_l)
+
+    # use adam optimizer
+    momentum_schedule = C.momentum_schedule(0.9, minibatch_size=BATCH_SIZE)
+    learner = C.fsadagrad(z.parameters,
+                          lr=lr_schedule,
+                          momentum=momentum_schedule)
+    trainer = C.Trainer(z, (loss, error), [learner])
+
     if not os.path.exists(model_file):
-        print("Training model {}...".format(model_file))
-
-        # create the model
-        z = create_model(x, H_DIMS)
-
-        # expected output (label), also the dynamic axes of the model output
-        # is specified as the model of the label input
-        var_l = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
-
-        # the learning rate
-        learning_rate = 0.005
-        lr_schedule = C.learning_parameter_schedule(learning_rate)
-
-        # loss function
-        loss = C.squared_error(z, var_l)
-
-        # use squared error to determine error for now
-        error = C.squared_error(z, var_l)
-
-        # use adam optimizer
-        momentum_schedule = C.momentum_schedule(0.9, minibatch_size=BATCH_SIZE)
-        learner = C.fsadagrad(z.parameters,
-                              lr=lr_schedule,
-                              momentum=momentum_schedule)
-        trainer = C.Trainer(z, (loss, error), [learner])
-
         # training
         loss_summary = []
 
@@ -223,9 +223,6 @@ def main():
         a = fig.add_subplot(2, 1, 1)
         results = []
         for x_batch, _ in next_batch(X, Y, ds, BATCH_SIZE):
-            print("================{}===================".format(ds))
-            print(X[ds])
-            print("===================================")
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
             break
