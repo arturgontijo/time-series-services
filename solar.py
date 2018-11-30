@@ -231,7 +231,7 @@ def main():
         a.plot(np.array(results) * NORMALIZE, label=ds + " pred")
         a.legend()
 
-        fig.savefig("{}_chart.jpg".format(ds))
+        fig.savefig("{}_chart_{}_epochs.jpg".format(ds, EPOCHS))
 
 
 if __name__ == "__main__":
