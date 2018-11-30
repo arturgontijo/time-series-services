@@ -156,6 +156,7 @@ def main():
 
     # input sequences
     x = C.sequence.input_variable(1)
+    print("x1 = {}".format(x))
 
     model_file = "solar_{}_epochs.model".format(EPOCHS)
 
@@ -205,11 +206,15 @@ def main():
         for labeltxt in ["train", "val", "test"]:
             print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, x, X, Y, BATCH_SIZE, var_l, labeltxt)))
 
+        print("x2 = {}".format(x))
         z.save(model_file)
 
     else:
         z = C.load_model(model_file)
-        x = C.input_variable(1)
+        print("x3 = {}".format(x))
+        x = C.sequence.input_variable(1)
+
+    print("x4 = {}".format(x))
 
     # Print out all layers in the model
     print("Loading {} and printing all layers:".format(model_file))
