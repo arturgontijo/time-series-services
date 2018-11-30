@@ -1,5 +1,5 @@
 import matplotlib
-matplotlib.use('Agg')
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 import numpy as np
@@ -33,7 +33,7 @@ def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_s
      (solar.current is the current output in Watt, solar.total is the total production
       for the day so far in Watt hours)
     """
-    # try to find the data file local. If it doesn't exists download it.
+    # try to find the data file local. If it doesn"t exists download it.
     cache_path = os.path.join("data", "iot")
     cache_file = os.path.join(cache_path, "solar.csv")
     if not os.path.exists(cache_path):
@@ -44,13 +44,13 @@ def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_s
     else:
         print("using cache for ", input_url)
 
-    df = pd.read_csv(cache_file, index_col="time", parse_dates=['time'], dtype=np.float32)
+    df = pd.read_csv(cache_file, index_col="time", parse_dates=["time"], dtype=np.float32)
 
     df["date"] = df.index.date
 
     # normalize data
-    df['solar.current'] /= normalize
-    df['solar.total'] /= normalize
+    df["solar.current"] /= normalize
+    df["solar.total"] /= normalize
 
     # group by day, find the max for a day and add a new column .max
     grouped = df.groupby(df.index.date).max()
@@ -159,53 +159,57 @@ def main():
 
     model_file = "solar.model"
 
-    print("Training model {}...".format(model_file))
+    if not os.path.exists(model_file):
+        print("Training model {}...".format(model_file))
 
-    # create the model
-    z = create_model(x, H_DIMS)
+        # create the model
+        z = create_model(x, H_DIMS)
 
-    # expected output (label), also the dynamic axes of the model output
-    # is specified as the model of the label input
-    var_l = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
+        # expected output (label), also the dynamic axes of the model output
+        # is specified as the model of the label input
+        var_l = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
 
-    # the learning rate
-    learning_rate = 0.005
-    lr_schedule = C.learning_parameter_schedule(learning_rate)
+        # the learning rate
+        learning_rate = 0.005
+        lr_schedule = C.learning_parameter_schedule(learning_rate)
 
-    # loss function
-    loss = C.squared_error(z, var_l)
+        # loss function
+        loss = C.squared_error(z, var_l)
 
-    # use squared error to determine error for now
-    error = C.squared_error(z, var_l)
+        # use squared error to determine error for now
+        error = C.squared_error(z, var_l)
 
-    # use adam optimizer
-    momentum_schedule = C.momentum_schedule(0.9, minibatch_size=BATCH_SIZE)
-    learner = C.fsadagrad(z.parameters,
-                          lr=lr_schedule,
-                          momentum=momentum_schedule)
-    trainer = C.Trainer(z, (loss, error), [learner])
+        # use adam optimizer
+        momentum_schedule = C.momentum_schedule(0.9, minibatch_size=BATCH_SIZE)
+        learner = C.fsadagrad(z.parameters,
+                              lr=lr_schedule,
+                              momentum=momentum_schedule)
+        trainer = C.Trainer(z, (loss, error), [learner])
 
-    # training
-    loss_summary = []
+        # training
+        loss_summary = []
 
-    start = time.time()
-    for epoch in range(0, EPOCHS):
-        for x_batch, l_batch in next_batch(X, Y, "train", BATCH_SIZE):
-            trainer.train_minibatch({x: x_batch, var_l: l_batch})
+        start = time.time()
+        for epoch in range(0, EPOCHS):
+            for x_batch, l_batch in next_batch(X, Y, "train", BATCH_SIZE):
+                trainer.train_minibatch({x: x_batch, var_l: l_batch})
 
-        if epoch % (EPOCHS / 10) == 0:
-            training_loss = trainer.previous_minibatch_loss_average
-            loss_summary.append(training_loss)
-            print("epoch: {}, loss: {:.4f}".format(epoch, training_loss))
+            if epoch % (EPOCHS / 10) == 0:
+                training_loss = trainer.previous_minibatch_loss_average
+                loss_summary.append(training_loss)
+                print("epoch: {}, loss: {:.4f}".format(epoch, training_loss))
 
-    print("Training took {:.1f} sec".format(time.time() - start))
+        print("Training took {:.1f} sec".format(time.time() - start))
 
-    # Print the train, validation and test errors
-    for labeltxt in ["train", "val", "test"]:
-        print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, x, X, Y, BATCH_SIZE, var_l, labeltxt)))
+        # Print the train, validation and test errors
+        for labeltxt in ["train", "val", "test"]:
+            print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, x, X, Y, BATCH_SIZE, var_l, labeltxt)))
+
+    else:
+        z = C.load_model(model_file)
 
     # Print out all layers in the model
-    print('Loading {} and printing all layers:'.format(model_file))
+    print("Loading {} and printing all layers:".format(model_file))
     node_outputs = C.logging.get_node_outputs(z)
     for n in node_outputs:
         print("  {}".format(n))
@@ -217,13 +221,14 @@ def main():
         a = fig.add_subplot(2, 1, 1)
         results = []
         for x_batch, _ in next_batch(X, Y, ds, BATCH_SIZE):
-            print("=================={}========================".format({x: x_batch}))
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
+            print("x: {}".format(x))
+            break
         # because we normalized the input data we need to multiply the prediction
         # with SCALER to get the real values.
-        a.plot((Y[ds] * NORMALIZE).flatten(), label=ds + ' raw')
-        a.plot(np.array(results) * NORMALIZE, label=ds + ' pred')
+        a.plot((Y[ds] * NORMALIZE).flatten(), label=ds + " raw")
+        a.plot(np.array(results) * NORMALIZE, label=ds + " pred")
         a.legend()
 
         fig.savefig("{}_chart.jpg".format(ds))
