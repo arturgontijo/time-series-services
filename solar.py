@@ -1,9 +1,10 @@
-from matplotlib import pyplot as plt
-import math
+import matplotlib as mpl
+mpl.use('Agg')
+import matplotlib.pyplot as plt
+
 import numpy as np
 import os
 import pandas as pd
-import random
 import time
 
 import cntk as C
@@ -216,7 +217,7 @@ def main():
         a[j].plot(np.array(results) * NORMALIZE, label=ds + ' pred')
         a[j].legend()
 
-    plt.savefig("output_chart.jpg")
+    fig.savefig("output_chart.jpg")
 
 
 if __name__ == "__main__":
