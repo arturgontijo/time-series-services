@@ -149,48 +149,58 @@ def main():
     # input sequences
     x = C.sequence.input_variable(1)
 
-    # create the model
-    z = create_model(x, H_DIMS)
+    model_file = "solar.model"
 
-    # expected output (label), also the dynamic axes of the model output
-    # is specified as the model of the label input
-    label = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
+    if not os.path.exists(model_file):
+        print("Training model {}...".format(model_file))
 
-    # the learning rate
-    learning_rate = 0.005
-    lr_schedule = C.learning_parameter_schedule(learning_rate)
+        # create the model
+        z = create_model(x, H_DIMS)
 
-    # loss function
-    loss = C.squared_error(z, label)
+        # expected output (label), also the dynamic axes of the model output
+        # is specified as the model of the label input
+        label = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
 
-    # use squared error to determine error for now
-    error = C.squared_error(z, label)
+        # the learning rate
+        learning_rate = 0.005
+        lr_schedule = C.learning_parameter_schedule(learning_rate)
 
-    # use adam optimizer
-    momentum_schedule = C.momentum_schedule(0.9, minibatch_size=BATCH_SIZE)
-    learner = C.fsadagrad(z.parameters,
-                          lr=lr_schedule,
-                          momentum=momentum_schedule)
-    trainer = C.Trainer(z, (loss, error), [learner])
+        # loss function
+        loss = C.squared_error(z, label)
 
-    # training
-    loss_summary = []
+        # use squared error to determine error for now
+        error = C.squared_error(z, label)
 
-    start = time.time()
-    for epoch in range(0, EPOCHS):
-        for x_batch, l_batch in next_batch(X, Y, "train", BATCH_SIZE):
-            trainer.train_minibatch({x: x_batch, label: l_batch})
+        # use adam optimizer
+        momentum_schedule = C.momentum_schedule(0.9, minibatch_size=BATCH_SIZE)
+        learner = C.fsadagrad(z.parameters,
+                              lr=lr_schedule,
+                              momentum=momentum_schedule)
+        trainer = C.Trainer(z, (loss, error), [learner])
 
-        if epoch % (EPOCHS / 10) == 0:
-            training_loss = trainer.previous_minibatch_loss_average
-            loss_summary.append(training_loss)
-            print("epoch: {}, loss: {:.4f}".format(epoch, training_loss))
+        # training
+        loss_summary = []
 
-    print("Training took {:.1f} sec".format(time.time() - start))
+        start = time.time()
+        for epoch in range(0, EPOCHS):
+            for x_batch, l_batch in next_batch(X, Y, "train", BATCH_SIZE):
+                trainer.train_minibatch({x: x_batch, label: l_batch})
 
-    # Print the train and validation errors
-    for labeltxt in ["train", "val", "test"]:
-        print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, X, Y, BATCH_SIZE, labeltxt)))
+            if epoch % (EPOCHS / 10) == 0:
+                training_loss = trainer.previous_minibatch_loss_average
+                loss_summary.append(training_loss)
+                print("epoch: {}, loss: {:.4f}".format(epoch, training_loss))
+
+        print("Training took {:.1f} sec".format(time.time() - start))
+
+        # Print the train and validation errors
+        for labeltxt in ["train", "val", "test"]:
+            print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, X, Y, BATCH_SIZE, labeltxt)))
+
+        z.save(model_file)
+    else:
+        print("Loading existent model {}...".format(model_file))
+        z = C.load_model(model_file)
 
     # predict
     f, a = plt.subplots(2, 1, figsize=(12, 8))
