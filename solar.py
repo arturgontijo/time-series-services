@@ -122,10 +122,10 @@ def create_model(x, h_dims):
 
 
 # validate
-def get_mse(trainer, x, y, batch_size, label, labeltxt):
+def get_mse(trainer, x, y, batch_size, labeltxt):
     result = 0.0
     for x1, y1 in next_batch(x, y, labeltxt, batch_size):
-        eval_error = trainer.test_minibatch({x: x1, label: y1})
+        eval_error = trainer.test_minibatch({x: x1, labeltxt: y1})
         result += eval_error
     return result/len(x[labeltxt])
 
@@ -190,7 +190,7 @@ def main():
 
     # Print the train and validation errors
     for labeltxt in ["train", "val", "test"]:
-        print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, X, Y, BATCH_SIZE, label, labeltxt)))
+        print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, X, Y, BATCH_SIZE, labeltxt)))
 
     # predict
     f, a = plt.subplots(2, 1, figsize=(12, 8))
