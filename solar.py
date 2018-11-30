@@ -203,6 +203,7 @@ def main():
         z = C.load_model(model_file)
 
     # predict
+    fig = plt.figure()
     f, a = plt.subplots(2, 1, figsize=(12, 8))
     for j, ds in enumerate(["val", "test"]):
         results = []
@@ -215,8 +216,7 @@ def main():
         a[j].plot(np.array(results) * NORMALIZE, label=ds + ' pred')
         a[j].legend()
 
-    a.savefig("chart_a.jpg")
-    f.savefig("chart_f.jpg")
+    fig.savefig("output_chart.jpg")
 
 
 if __name__ == "__main__":
