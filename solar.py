@@ -157,7 +157,7 @@ def main():
     # input sequences
     x = C.sequence.input_variable(1)
 
-    model_file = "solar.model"
+    model_file = "solar_{}_epochs.model".format(EPOCHS)
 
     if not os.path.exists(model_file):
         print("Training model {}...".format(model_file))
@@ -204,6 +204,8 @@ def main():
         # Print the train, validation and test errors
         for labeltxt in ["train", "val", "test"]:
             print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, x, X, Y, BATCH_SIZE, var_l, labeltxt)))
+
+        z.save(model_file)
 
     else:
         z = C.load_model(model_file)
