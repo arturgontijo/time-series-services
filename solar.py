@@ -209,6 +209,7 @@ def main():
 
     else:
         z = C.load_model(model_file)
+        x = C.input_variable(1)
 
     # Print out all layers in the model
     print("Loading {} and printing all layers:".format(model_file))
@@ -223,9 +224,9 @@ def main():
         a = fig.add_subplot(2, 1, 1)
         results = []
         for x_batch, _ in next_batch(X, Y, ds, BATCH_SIZE):
+            print("x: {}".format(x))
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
-            print("x: {}".format(x))
             break
         # because we normalized the input data we need to multiply the prediction
         # with SCALER to get the real values.
