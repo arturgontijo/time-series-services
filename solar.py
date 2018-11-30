@@ -210,21 +210,21 @@ def main():
         print("  {0} {1}".format(n.name, n.shape))
 
     # predict
-    fig = plt.figure()
-    a = [fig.add_subplot(2, 1, 1), fig.add_subplot(2, 1, 1)]
     # f, a = plt.subplots(2, 1, figsize=(12, 8))
     for j, ds in enumerate(["val", "test"]):
+        fig = plt.figure()
+        a = fig.add_subplot(2, 1, 1)
         results = []
         for x_batch, _ in next_batch(X, Y, ds, BATCH_SIZE):
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
         # because we normalized the input data we need to multiply the prediction
         # with SCALER to get the real values.
-        a[j].plot((Y[ds] * NORMALIZE).flatten(), label=ds + ' raw')
-        a[j].plot(np.array(results) * NORMALIZE, label=ds + ' pred')
-        a[j].legend()
+        a.plot((Y[ds] * NORMALIZE).flatten(), label=ds + ' raw')
+        a.plot(np.array(results) * NORMALIZE, label=ds + ' pred')
+        a.legend()
 
-    fig.savefig("output_chart.jpg")
+        fig.savefig("{}_chart.jpg".format(ds))
 
 
 if __name__ == "__main__":
