@@ -195,6 +195,7 @@ def main():
 
         # Print the train and validation errors
         for labeltxt in ["train", "val", "test"]:
+            print(labeltxt)
             print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, X, Y, BATCH_SIZE, labeltxt)))
 
         z.save(model_file)
