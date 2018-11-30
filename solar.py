@@ -205,9 +205,9 @@ def main():
 
     # Print out all layers in the model
     print('Loading {} and printing all layers:'.format(model_file))
-    node_outputs = C.logging.get_node_outputs(C.load_model(model_file))
+    node_outputs = C.logging.get_node_outputs(z)
     for n in node_outputs:
-        print("  {0} {1}".format(n.name, n.shape))
+        print("  {}".format(n))
 
     # predict
     # f, a = plt.subplots(2, 1, figsize=(12, 8))
@@ -216,6 +216,7 @@ def main():
         a = fig.add_subplot(2, 1, 1)
         results = []
         for x_batch, _ in next_batch(X, Y, ds, BATCH_SIZE):
+            print("x_batch: ", x_batch)
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
         # because we normalized the input data we need to multiply the prediction
