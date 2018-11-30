@@ -122,10 +122,10 @@ def create_model(x, h_dims):
 
 
 # validate
-def get_mse(trainer, x_label, x, y, batch_size, labeltxt):
+def get_mse(trainer, x_label, x, y, batch_size, l_label, labeltxt):
     result = 0.0
     for x1, y1 in next_batch(x, y, labeltxt, batch_size):
-        eval_error = trainer.test_minibatch({x_label: x1, labeltxt: y1})
+        eval_error = trainer.test_minibatch({x_label: x1, l_label: y1})
         result += eval_error
     return result/len(x[labeltxt])
 
@@ -159,17 +159,17 @@ def main():
 
         # expected output (label), also the dynamic axes of the model output
         # is specified as the model of the label input
-        label = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
+        var_l = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
 
         # the learning rate
         learning_rate = 0.005
         lr_schedule = C.learning_parameter_schedule(learning_rate)
 
         # loss function
-        loss = C.squared_error(z, label)
+        loss = C.squared_error(z, var_l)
 
         # use squared error to determine error for now
-        error = C.squared_error(z, label)
+        error = C.squared_error(z, var_l)
 
         # use adam optimizer
         momentum_schedule = C.momentum_schedule(0.9, minibatch_size=BATCH_SIZE)
@@ -195,8 +195,7 @@ def main():
 
         # Print the train and validation errors
         for labeltxt in ["train", "val", "test"]:
-            print(labeltxt)
-            print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, x, X, Y, BATCH_SIZE, labeltxt)))
+            print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, x, X, Y, BATCH_SIZE, var_l, labeltxt)))
 
         z.save(model_file)
     else:
