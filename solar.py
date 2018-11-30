@@ -216,7 +216,7 @@ def main():
         a[j].plot(np.array(results) * NORMALIZE, label=ds + ' pred')
         a[j].legend()
 
-    fig.savefig("output_chart.jpg")
+    plt.savefig("output_chart.jpg")
 
 
 if __name__ == "__main__":
