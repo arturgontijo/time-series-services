@@ -211,10 +211,8 @@ def main():
 
     else:
         z = C.load_model(model_file)
-        print("x3 = {}".format(x))
-        x = C.sequence.input_variable(1)
 
-    print("x4 = {}".format(x))
+    print("x3 = {}".format(x))
 
     # Print out all layers in the model
     print("Loading {} and printing all layers:".format(model_file))
