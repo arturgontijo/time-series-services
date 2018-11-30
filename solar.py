@@ -132,6 +132,13 @@ def get_mse(trainer, x_label, x, y, batch_size, l_label, labeltxt):
 
 
 def main():
+
+    epochs = input("Epochs: ")
+    if epochs == "":
+        EPOCHS = 100
+    else:
+        EPOCHS = int(epochs)
+
     # We keep upto 14 inputs from a day
     TIMESTEPS = 14
 
@@ -152,70 +159,56 @@ def main():
 
     model_file = "solar.model"
 
-    if not os.path.exists(model_file):
-        print("Training model {}...".format(model_file))
+    print("Training model {}...".format(model_file))
 
-        # create the model
-        z = create_model(x, H_DIMS)
+    # create the model
+    z = create_model(x, H_DIMS)
 
-        # expected output (label), also the dynamic axes of the model output
-        # is specified as the model of the label input
-        var_l = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
+    # expected output (label), also the dynamic axes of the model output
+    # is specified as the model of the label input
+    var_l = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
 
-        # the learning rate
-        learning_rate = 0.005
-        lr_schedule = C.learning_parameter_schedule(learning_rate)
+    # the learning rate
+    learning_rate = 0.005
+    lr_schedule = C.learning_parameter_schedule(learning_rate)
 
-        # loss function
-        loss = C.squared_error(z, var_l)
+    # loss function
+    loss = C.squared_error(z, var_l)
 
-        # use squared error to determine error for now
-        error = C.squared_error(z, var_l)
+    # use squared error to determine error for now
+    error = C.squared_error(z, var_l)
 
-        # use adam optimizer
-        momentum_schedule = C.momentum_schedule(0.9, minibatch_size=BATCH_SIZE)
-        learner = C.fsadagrad(z.parameters,
-                              lr=lr_schedule,
-                              momentum=momentum_schedule)
-        trainer = C.Trainer(z, (loss, error), [learner])
+    # use adam optimizer
+    momentum_schedule = C.momentum_schedule(0.9, minibatch_size=BATCH_SIZE)
+    learner = C.fsadagrad(z.parameters,
+                          lr=lr_schedule,
+                          momentum=momentum_schedule)
+    trainer = C.Trainer(z, (loss, error), [learner])
 
-        # training
-        loss_summary = []
+    # training
+    loss_summary = []
 
-        start = time.time()
-        for epoch in range(0, EPOCHS):
-            for x_batch, l_batch in next_batch(X, Y, "train", BATCH_SIZE):
-                trainer.train_minibatch({x: x_batch, var_l: l_batch})
+    start = time.time()
+    for epoch in range(0, EPOCHS):
+        for x_batch, l_batch in next_batch(X, Y, "train", BATCH_SIZE):
+            trainer.train_minibatch({x: x_batch, var_l: l_batch})
 
-            if epoch % (EPOCHS / 10) == 0:
-                training_loss = trainer.previous_minibatch_loss_average
-                loss_summary.append(training_loss)
-                print("epoch: {}, loss: {:.4f}".format(epoch, training_loss))
+        if epoch % (EPOCHS / 10) == 0:
+            training_loss = trainer.previous_minibatch_loss_average
+            loss_summary.append(training_loss)
+            print("epoch: {}, loss: {:.4f}".format(epoch, training_loss))
 
-        print("Training took {:.1f} sec".format(time.time() - start))
+    print("Training took {:.1f} sec".format(time.time() - start))
 
-        # Print the train, validation and test errors
-        for labeltxt in ["train", "val", "test"]:
-            print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, x, X, Y, BATCH_SIZE, var_l, labeltxt)))
-
-        z.save(model_file)
-    else:
-        print("Loading existent model {}...".format(model_file))
-        z = C.load_model(model_file)
+    # Print the train, validation and test errors
+    for labeltxt in ["train", "val", "test"]:
+        print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, x, X, Y, BATCH_SIZE, var_l, labeltxt)))
 
     # Print out all layers in the model
     print('Loading {} and printing all layers:'.format(model_file))
     node_outputs = C.logging.get_node_outputs(z)
     for n in node_outputs:
         print("  {}".format(n))
-
-    label = C.input_variable(1)
-    eval_error = C.classification_error(z, label)
-    acc = C.reduce_mean(eval_error, axis=z.dynamic_axes[0])
-
-    features_test, _ = next_batch(X, Y, "test", BATCH_SIZE)
-    acc_value = acc.eval({z.arguments[0]: features_test, label: "test"})
-    print("JOW====> Accuracy: {}".format(acc_value))
 
     # predict
     # f, a = plt.subplots(2, 1, figsize=(12, 8))
