@@ -209,6 +209,7 @@ def main():
 
     else:
         z = C.load_model(model_file)
+        x = cntk.logging.find_all_with_name(z, "")[-1]
 
     # Print out all layers in the model
     print("Loading {} and printing all nodes:".format(model_file))
@@ -223,8 +224,6 @@ def main():
         a = fig.add_subplot(2, 1, 1)
         results = []
         for x_batch, y_batch in next_batch(X, Y, ds, BATCH_SIZE):
-            print("x: ", x)
-            print("x_batch: ", x_batch)
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
             break
