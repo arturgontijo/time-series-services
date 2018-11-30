@@ -156,7 +156,6 @@ def main():
 
     # input sequences
     x = C.sequence.input_variable(1)
-    print("x1 = {}".format(x))
 
     model_file = "solar_{}_epochs.model".format(EPOCHS)
 
@@ -206,13 +205,10 @@ def main():
         for labeltxt in ["train", "val", "test"]:
             print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, x, X, Y, BATCH_SIZE, var_l, labeltxt)))
 
-        print("x2 = {}".format(x))
         z.save(model_file)
 
     else:
         z = C.load_model(model_file)
-
-    print("x3 = {}".format(x))
 
     # Print out all layers in the model
     print("Loading {} and printing all layers:".format(model_file))
@@ -227,7 +223,9 @@ def main():
         a = fig.add_subplot(2, 1, 1)
         results = []
         for x_batch, _ in next_batch(X, Y, ds, BATCH_SIZE):
-            print("x: {}".format(x))
+            print("================{}===================".format(ds))
+            print(X[ds])
+            print("===================================")
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
             break
