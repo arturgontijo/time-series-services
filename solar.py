@@ -184,7 +184,7 @@ def main():
         start = time.time()
         for epoch in range(0, EPOCHS):
             for x_batch, l_batch in next_batch(X, Y, "train", BATCH_SIZE):
-                trainer.train_minibatch({x: x_batch, label: l_batch})
+                trainer.train_minibatch({x: x_batch, var_l: l_batch})
 
             if epoch % (EPOCHS / 10) == 0:
                 training_loss = trainer.previous_minibatch_loss_average
