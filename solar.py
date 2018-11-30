@@ -226,7 +226,6 @@ def main():
         for x_batch, y_batch in next_batch(X, Y, ds, BATCH_SIZE):
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
-            break
         # because we normalized the input data we need to multiply the prediction
         # with SCALER to get the real values.
         a.plot((Y[ds] * NORMALIZE).flatten(), label=ds + " raw")
