@@ -205,7 +205,8 @@ def main():
 
     # predict
     fig = plt.figure()
-    f, a = plt.subplots(2, 1, figsize=(12, 8))
+    a = fig.add_subplot(2, 1, figsize=(12, 8))
+    # f, a = plt.subplots(2, 1, figsize=(12, 8))
     for j, ds in enumerate(["val", "test"]):
         results = []
         for x_batch, _ in next_batch(X, Y, ds, BATCH_SIZE):
@@ -217,7 +218,7 @@ def main():
         a[j].plot(np.array(results) * NORMALIZE, label=ds + ' pred')
         a[j].legend()
 
-        a[j].savefig("{}_chart.jpg".format(ds))
+    fig.savefig("output_chart.jpg")
 
 
 if __name__ == "__main__":
