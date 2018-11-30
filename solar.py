@@ -209,6 +209,14 @@ def main():
     for n in node_outputs:
         print("  {}".format(n))
 
+    label = C.input_variable(1)
+    eval_error = C.classification_error(z, label)
+    acc = C.reduce_mean(eval_error, axis=z.dynamic_axes[0])
+
+    features_test, _ = next_batch(X, Y, "test", BATCH_SIZE)
+    acc_value = acc.eval({z.arguments[0]: features_test, label: "test"})
+    print("JOW====> Accuracy: {}".format(acc_value))
+
     # predict
     # f, a = plt.subplots(2, 1, figsize=(12, 8))
     for j, ds in enumerate(["val", "test"]):
