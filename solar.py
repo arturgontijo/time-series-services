@@ -222,10 +222,10 @@ def main():
         fig = plt.figure()
         a = fig.add_subplot(2, 1, 1)
         results = []
-        for x_batch, _ in next_batch(X, Y, ds, BATCH_SIZE):
+        for x_batch, y_batch in next_batch(X, Y, ds, BATCH_SIZE):
+            print("y_batch: ", y_batch)
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
-            break
         # because we normalized the input data we need to multiply the prediction
         # with SCALER to get the real values.
         a.plot((Y[ds] * NORMALIZE).flatten(), label=ds + " raw")
