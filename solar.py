@@ -198,6 +198,7 @@ def main():
     H_DIMS = 15
 
     data_source = input("Source(1=solar,2=sin): ")
+    start_time = time.time()
     if data_source == "1" or data_source == "":
         X, Y = get_solar(TIMESTEPS, NORMALIZE)
     else:
@@ -288,6 +289,8 @@ def main():
         a.legend()
 
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, EPOCHS))
+
+    print("Delta: ", start_time - time.time())
 
 
 if __name__ == "__main__":
