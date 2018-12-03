@@ -172,22 +172,18 @@ def generate_data(fct, x, time_steps, time_shift):
     return split_data(rnn_x), split_data(rnn_y)
 
 
-def get_sin(n, m):
+def get_sin(n, m, total_len):
     N = n  # input: N subsequent values
     M = m  # output: predict 1 value M steps ahead
-    return generate_data(np.sin, np.linspace(0, 100, 10000, dtype=np.float32), N, M)
-
+    return generate_data(np.sin, np.linspace(0, 100, total_len, dtype=np.float32), N, M)
 # =============================================================================================
 
 
+def get_solar(t, n):
+    return generate_solar_data("https://www.cntk.ai/jup/dat/solar.csv", t, normalize=n)
+
+
 def main():
-
-    epochs = input("Epochs: ")
-    if epochs == "":
-        EPOCHS = 100
-    else:
-        EPOCHS = int(epochs)
-
     # We keep upto 14 inputs from a day
     TIMESTEPS = 14
 
@@ -201,12 +197,22 @@ def main():
     # Specify the internal-state dimensions of the LSTM cell
     H_DIMS = 15
 
-    X, Y = generate_solar_data("https://www.cntk.ai/jup/dat/solar.csv",  TIMESTEPS, normalize=NORMALIZE)
+    data_source = input("Source(1=solar,2=sin): ")
+    if data_source == "1" or data_source == "":
+        X, Y = get_solar(TIMESTEPS, NORMALIZE)
+    else:
+        X, Y = get_sin(5, 5, input("Data lenght: "))
+
+    epochs = input("Epochs: ")
+    if epochs == "":
+        EPOCHS = 100
+    else:
+        EPOCHS = int(epochs)
 
     # input sequences
     x = C.sequence.input_variable(1)
 
-    model_file = "solar_{}_epochs.model".format(EPOCHS)
+    model_file = "{}_epochs.model".format(EPOCHS)
 
     if not os.path.exists(model_file):
         print("Training model {}...".format(model_file))
