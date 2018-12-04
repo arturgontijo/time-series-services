@@ -26,6 +26,45 @@ isFast = True
 EPOCHS = 100 if isFast else 2000
 
 
+def generate_my_data(data_file, time_steps, time_shift):
+    """
+    generate sequences to feed to rnn for fct(x)
+    """
+    data = pd.read_csv(data_file, dtype=np.float32)
+    print("data1: ", data)
+    data = pd.DataFrame(dict(a=data.values[0:len(data) - time_shift],
+                             b=data.values[time_shift:]))
+    print("data2: ", data)
+
+    rnn_x = []
+    for i in range(len(data) - time_steps + 1):
+        rnn_x.append(data['a'].iloc[i: i + time_steps].as_matrix())
+    rnn_x = np.array(rnn_x)
+
+    # Reshape or rearrange the data from row to columns
+    # to be compatible with the input needed by the LSTM model
+    # which expects 1 float per time point in a given batch
+    rnn_x = rnn_x.reshape(rnn_x.shape + (1,))
+
+    rnn_y = data['b'].values
+    rnn_y = rnn_y[time_steps - 1:]
+
+    # Reshape or rearrange the data from row to columns
+    # to match the input shape
+    rnn_y = rnn_y.reshape(rnn_y.shape + (1,))
+
+    return split_data(rnn_x), split_data(rnn_y)
+
+
+def get_my_data(n, m):
+    N = n  # input: N subsequent values
+    M = m  # output: predict 1 value M steps ahead
+    return generate_my_data(input("CSV path: "), N, M)
+
+
+# =============================================================================================
+
+
 def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_size=0.1):
     """
     generate sequences to feed to rnn based on data frame with solar panel data
@@ -237,44 +276,6 @@ def get_sin(n, m, total_len):
     return generate_data(np.sin, np.linspace(0, 100, total_len, dtype=np.float32), N, M)
 # =============================================================================================
 
-
-def generate_my_data(data_file, time_steps, time_shift):
-    """
-    generate sequences to feed to rnn for fct(x)
-    """
-    data = pd.read_csv(data_file, dtype=np.float32)
-    print("data1: ", data)
-    data = pd.DataFrame(dict(a=data[0:len(data) - time_shift],
-                             b=data[time_shift:]))
-    print("data2: ", data)
-
-    rnn_x = []
-    for i in range(len(data) - time_steps + 1):
-        rnn_x.append(data['a'].iloc[i: i + time_steps].as_matrix())
-    rnn_x = np.array(rnn_x)
-
-    # Reshape or rearrange the data from row to columns
-    # to be compatible with the input needed by the LSTM model
-    # which expects 1 float per time point in a given batch
-    rnn_x = rnn_x.reshape(rnn_x.shape + (1,))
-
-    rnn_y = data['b'].values
-    rnn_y = rnn_y[time_steps - 1:]
-
-    # Reshape or rearrange the data from row to columns
-    # to match the input shape
-    rnn_y = rnn_y.reshape(rnn_y.shape + (1,))
-
-    return split_data(rnn_x), split_data(rnn_y)
-
-
-def get_my_data(n, m):
-    N = n  # input: N subsequent values
-    M = m  # output: predict 1 value M steps ahead
-    return generate_my_data(input("CSV path: "), N, M)
-
-
-# =============================================================================================
 def get_solar_old(t, n):
     # "https://www.cntk.ai/jup/dat/solar.csv"
     return generate_solar_data_old(input("CSV path: "), t, normalize=n)
