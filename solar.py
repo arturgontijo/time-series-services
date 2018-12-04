@@ -59,10 +59,7 @@ def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_s
     result_y = {"train": [], "val": [], "test": []}
 
     # generate sequences a day at a time
-    for i, day in enumerate(df):
-        # if we have less than 8 datapoints for a day we skip over the
-        # day assuming something is missing in the raw data
-        total = day["x"].values
+    for i, total in enumerate(df["x"].values):
         if len(total) < 8:
             continue
         if i >= next_val:
@@ -73,7 +70,7 @@ def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_s
             next_test = i + int(len(time_steps) / test_size)
         else:
             current_set = "train"
-        max_total_for_day = np.array(day["y"].values[0])
+        max_total_for_day = np.array(df["y"].values[0])
         for j in range(2, len(total)):
             result_x[current_set].append(total[0:j])
             result_y[current_set].append([max_total_for_day])
