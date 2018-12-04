@@ -292,11 +292,19 @@ def main():
     # Specify the internal-state dimensions of the LSTM cell
     H_DIMS = 15
 
-    data_source = input("Source(1=solar,2=sin): ")
+    data_source = input("Source(1=solar,2=local,3=sin): ")
     if data_source == "1" or data_source == "":
+        X, Y = get_solar_old(TIMESTEPS, NORMALIZE)
+    elif data_source == "2":
         X, Y = get_solar(TIMESTEPS, NORMALIZE)
     else:
-        X, Y = get_sin(5, 5, input("Data lenght: "))
+        X, Y = get_sin(5, 5, input("Data length: "))
+
+    print("X: ", X)
+    print("len(X): ", len(X))
+
+    print("Y: ", Y)
+    print("len(Y): ", len(Y))
 
     epochs = input("Epochs: ")
     if epochs == "":
