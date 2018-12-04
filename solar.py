@@ -44,6 +44,62 @@ def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_s
     else:
         print("using cache for ", input_url)
 
+    df = pd.read_csv(cache_file, index_col="x", dtype=np.float32)
+
+    # split the dataset into train, validation and test sets on day boundaries
+    val_size = int(len(df) * val_size)
+    test_size = int(len(df) * test_size)
+    next_val = 0
+    next_test = 0
+
+    result_x = {"train": [], "val": [], "test": []}
+    result_y = {"train": [], "val": [], "test": []}
+
+    # generate sequences a day at a time
+    for i, day in enumerate(df):
+        # if we have less than 8 datapoints for a day we skip over the
+        # day assuming something is missing in the raw data
+        total = day["x"].values
+        if len(total) < 8:
+            continue
+        if i >= next_val:
+            current_set = "val"
+            next_val = i + int(len(time_steps) / val_size)
+        elif i >= next_test:
+            current_set = "test"
+            next_test = i + int(len(time_steps) / test_size)
+        else:
+            current_set = "train"
+        max_total_for_day = np.array(day["y"].values[0])
+        for j in range(2, len(total)):
+            result_x[current_set].append(total[0:j])
+            result_y[current_set].append([max_total_for_day])
+            if j >= time_steps:
+                break
+    # make result_y a numpy array
+    for ds in ["train", "val", "test"]:
+        result_y[ds] = np.array(result_y[ds])
+    return result_x, result_y
+
+
+def generate_solar_data_old(input_url, time_steps, normalize=1, val_size=0.1, test_size=0.1):
+    """
+    generate sequences to feed to rnn based on data frame with solar panel data
+    the csv has the format: time ,solar.current, solar.total
+     (solar.current is the current output in Watt, solar.total is the total production
+      for the day so far in Watt hours)
+    """
+    # try to find the data file local. If it doesn"t exists download it.
+    cache_path = os.path.join("data", "iot")
+    cache_file = os.path.join(cache_path, "solar.csv")
+    if not os.path.exists(cache_path):
+        os.makedirs(cache_path)
+    if not os.path.exists(cache_file):
+        urlretrieve(input_url, cache_file)
+        print("downloaded data successfully from ", input_url)
+    else:
+        print("using cache for ", input_url)
+
     df = pd.read_csv(cache_file, index_col="time", parse_dates=["time"], dtype=np.float32)
 
     df["date"] = df.index.date
@@ -181,8 +237,50 @@ def get_sin(n, m, total_len):
 # =============================================================================================
 
 
-def get_solar(t, n):
+def generate_my_data(fct, x, time_steps, time_shift):
+    """
+    generate sequences to feed to rnn for fct(x)
+    """
+    data = fct(x)
+    print("data=fct(x): ", data)
+    if not isinstance(data, pd.DataFrame):
+        data = pd.DataFrame(dict(a=data[0:len(data) - time_shift],
+                                 b=data[time_shift:]))
+    print("data(pandas): ", data)
+    rnn_x = []
+    for i in range(len(data) - time_steps + 1):
+        rnn_x.append(data['a'].iloc[i: i + time_steps].as_matrix())
+    rnn_x = np.array(rnn_x)
+
+    # Reshape or rearrange the data from row to columns
+    # to be compatible with the input needed by the LSTM model
+    # which expects 1 float per time point in a given batch
+    rnn_x = rnn_x.reshape(rnn_x.shape + (1,))
+
+    rnn_y = data['b'].values
+    rnn_y = rnn_y[time_steps - 1:]
+
+    # Reshape or rearrange the data from row to columns
+    # to match the input shape
+    rnn_y = rnn_y.reshape(rnn_y.shape + (1,))
+
+    return split_data(rnn_x), split_data(rnn_y)
+
+
+def get_my_data(n, m, total_len):
+    N = n  # input: N subsequent values
+    M = m  # output: predict 1 value M steps ahead
+    return generate_my_data(np.sin, np.linspace(0, 100, total_len, dtype=np.float32), N, M)
+
+
+# =============================================================================================
+def get_solar_old(t, n):
     return generate_solar_data("https://www.cntk.ai/jup/dat/solar.csv", t, normalize=n)
+# =============================================================================================
+
+
+def get_solar(t, n):
+    return generate_solar_data(input("CSV file: "), t, normalize=n)
 
 
 def main():
