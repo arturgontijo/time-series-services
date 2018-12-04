@@ -85,15 +85,18 @@ def generate_solar_data_old(input_url, time_steps, normalize=1, val_size=0.1, te
       for the day so far in Watt hours)
     """
     # try to find the data file local. If it doesn"t exists download it.
-    cache_path = os.path.join("data", "iot")
-    cache_file = os.path.join(cache_path, "solar.csv")
-    if not os.path.exists(cache_path):
-        os.makedirs(cache_path)
-    if not os.path.exists(cache_file):
-        urlretrieve(input_url, cache_file)
-        print("downloaded data successfully from ", input_url)
+    if "http://" in input_url or "https://" in input_url:
+        cache_path = os.path.join("data", "iot")
+        cache_file = os.path.join(cache_path, "solar.csv")
+        if not os.path.exists(cache_path):
+            os.makedirs(cache_path)
+        if not os.path.exists(cache_file):
+            urlretrieve(input_url, cache_file)
+            print("downloaded data successfully from ", input_url)
+        else:
+            print("using cache for ", input_url)
     else:
-        print("using cache for ", input_url)
+        cache_file = input_url
 
     df = pd.read_csv(cache_file, index_col="time", parse_dates=["time"], dtype=np.float32)
 
@@ -270,7 +273,8 @@ def get_my_data(n, m, total_len):
 
 # =============================================================================================
 def get_solar_old(t, n):
-    return generate_solar_data("https://www.cntk.ai/jup/dat/solar.csv", t, normalize=n)
+    # "https://www.cntk.ai/jup/dat/solar.csv"
+    return generate_solar_data_old(input("CSV path: "), t, normalize=n)
 # =============================================================================================
 
 
