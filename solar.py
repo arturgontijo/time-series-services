@@ -307,7 +307,7 @@ def main():
     elif data_source == "3":
         X, Y = get_sin(5, 5, input("Data length: "))
     else:
-        X, Y = get_my_data(TIMESTEPS, NORMALIZE)
+        X, Y = get_my_data(5, 5)
 
     print("X: ", X)
     print("len(X): ", len(X))
