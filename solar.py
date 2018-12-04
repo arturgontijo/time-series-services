@@ -228,7 +228,8 @@ def split_data(data, val_size=0.1, test_size=0.1):
     pos_test = int(len(data) * (1 - test_size))
     pos_val = int(len(data[:pos_test]) * (1 - val_size))
 
-    train, val, test = data[:pos_val], data[pos_val:pos_test], data[pos_test:]
+    # train, val, test = data[:pos_val], data[pos_val:pos_test], data[pos_test:]
+    train, val, test = data, data[:200], data[200:400]
 
     return {"train": train, "val": val, "test": test}
 
