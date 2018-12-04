@@ -68,12 +68,9 @@ def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_s
             next_test = i + int(len(df) / test_size)
         else:
             current_set = "train"
-        max_total_for_day = np.array(df["y"].values[0])
-        for j in range(2, len(total)):
-            result_x[current_set].append(total[0:j])
-            result_y[current_set].append([max_total_for_day])
-            if j >= time_steps:
-                break
+        result_x[current_set].append(total)
+        result_y[current_set].append([np.array(df["y"].values[0])])
+
     # make result_y a numpy array
     for ds in ["train", "val", "test"]:
         result_y[ds] = np.array(result_y[ds])
