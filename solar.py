@@ -34,15 +34,18 @@ def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_s
       for the day so far in Watt hours)
     """
     # try to find the data file local. If it doesn"t exists download it.
-    cache_path = os.path.join("data", "iot")
-    cache_file = os.path.join(cache_path, "solar.csv")
-    if not os.path.exists(cache_path):
-        os.makedirs(cache_path)
-    if not os.path.exists(cache_file):
-        urlretrieve(input_url, cache_file)
-        print("downloaded data successfully from ", input_url)
+    if "http://" in input_url or "https://" in input_url:
+        cache_path = os.path.join("data", "iot")
+        cache_file = os.path.join(cache_path, "solar.csv")
+        if not os.path.exists(cache_path):
+            os.makedirs(cache_path)
+        if not os.path.exists(cache_file):
+            urlretrieve(input_url, cache_file)
+            print("downloaded data successfully from ", input_url)
+        else:
+            print("using cache for ", input_url)
     else:
-        print("using cache for ", input_url)
+        cache_file = input_url
 
     df = pd.read_csv(cache_file, index_col="x", dtype=np.float32)
 
