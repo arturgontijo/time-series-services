@@ -238,16 +238,16 @@ def get_sin(n, m, total_len):
 # =============================================================================================
 
 
-def generate_my_data(fct, x, time_steps, time_shift):
+def generate_my_data(data_file, time_steps, time_shift):
     """
     generate sequences to feed to rnn for fct(x)
     """
-    data = fct(x)
-    print("data=fct(x): ", data)
-    if not isinstance(data, pd.DataFrame):
-        data = pd.DataFrame(dict(a=data[0:len(data) - time_shift],
-                                 b=data[time_shift:]))
-    print("data(pandas): ", data)
+    data = pd.read_csv(data_file, dtype=np.float32)
+    print("data1: ", data)
+    data = pd.DataFrame(dict(a=data[0:len(data) - time_shift],
+                             b=data[time_shift:]))
+    print("data2: ", data)
+
     rnn_x = []
     for i in range(len(data) - time_steps + 1):
         rnn_x.append(data['a'].iloc[i: i + time_steps].as_matrix())
@@ -268,10 +268,10 @@ def generate_my_data(fct, x, time_steps, time_shift):
     return split_data(rnn_x), split_data(rnn_y)
 
 
-def get_my_data(n, m, total_len):
+def get_my_data(n, m):
     N = n  # input: N subsequent values
     M = m  # output: predict 1 value M steps ahead
-    return generate_my_data(np.sin, np.linspace(0, 100, total_len, dtype=np.float32), N, M)
+    return generate_my_data(input("CSV path: "), N, M)
 
 
 # =============================================================================================
@@ -299,13 +299,15 @@ def main():
     # Specify the internal-state dimensions of the LSTM cell
     H_DIMS = 15
 
-    data_source = input("Source(1=solar,2=local,3=sin): ")
+    data_source = input("Source(1=solar,2=local,3=sin,4=my): ")
     if data_source == "1" or data_source == "":
         X, Y = get_solar_old(TIMESTEPS, NORMALIZE)
     elif data_source == "2":
         X, Y = get_solar(TIMESTEPS, NORMALIZE)
-    else:
+    elif data_source == "3":
         X, Y = get_sin(5, 5, input("Data length: "))
+    else:
+        X, Y = get_my_data(TIMESTEPS, NORMALIZE)
 
     print("X: ", X)
     print("len(X): ", len(X))
