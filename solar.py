@@ -66,7 +66,7 @@ def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_s
     for _, group in grouped:
         per_day.append(group)
 
-    # split the dataset into train, validatation and test sets on day boundaries
+    # split the dataset into train, validation and test sets on day boundaries
     val_size = int(len(per_day) * val_size)
     test_size = int(len(per_day) * test_size)
     next_val = 0
@@ -149,9 +149,11 @@ def generate_data(fct, x, time_steps, time_shift):
     generate sequences to feed to rnn for fct(x)
     """
     data = fct(x)
+    print("data=fct(x): ", data)
     if not isinstance(data, pd.DataFrame):
         data = pd.DataFrame(dict(a=data[0:len(data) - time_shift],
                                  b=data[time_shift:]))
+    print("data(pandas): ", data)
     rnn_x = []
     for i in range(len(data) - time_steps + 1):
         rnn_x.append(data['a'].iloc[i: i + time_steps].as_matrix())
