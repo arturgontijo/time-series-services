@@ -47,7 +47,7 @@ def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_s
     else:
         cache_file = input_url
 
-    df = pd.read_csv(cache_file, index_col="x", dtype=np.float32)
+    df = pd.read_csv(cache_file, dtype=np.float32)
 
     # split the dataset into train, validation and test sets on day boundaries
     val_size = int(len(df) * val_size)
