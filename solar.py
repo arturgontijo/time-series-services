@@ -282,17 +282,18 @@ def get_solar(t, n):
 
 def main():
     # We keep upto 14 inputs from a day
-    TIMESTEPS = 14
+    TIMESTEPS = int(input("TIMESTEPS: "))
 
     # 20000 is the maximum total output in our dataset. We normalize all values with
     # this so our inputs are between 0.0 and 1.0 range.
-    NORMALIZE = 20000
+    NORMALIZE = int(input("NORMALIZE: "))
 
     # process batches of 10 days
-    BATCH_SIZE = TIMESTEPS * 10
+    BATCH_SIZE = int(input("BATCH_SIZE: "))
+    BATCH_SIZE_TEST = int(input("BATCH_SIZE_TEST: "))
 
     # Specify the internal-state dimensions of the LSTM cell
-    H_DIMS = 15
+    H_DIMS = int(input("H_DIMS: "))
 
     data_source = input("Source(1=solar,2=local,3=sin,4=my): ")
     if data_source == "1" or data_source == "":
@@ -302,13 +303,7 @@ def main():
     elif data_source == "3":
         X, Y = get_sin(5, 5, input("Data length: "))
     else:
-        X, Y = get_my_data(5, 5)
-
-    print("X: ", X)
-    print("len(X): ", len(X))
-
-    print("Y: ", Y)
-    print("len(Y): ", len(Y))
+        X, Y = get_my_data(H_DIMS, H_DIMS)
 
     epochs = input("Epochs: ")
     if epochs == "":
@@ -387,7 +382,7 @@ def main():
         fig = plt.figure()
         a = fig.add_subplot(2, 1, 1)
         results = []
-        for x_batch, y_batch in next_batch(X, Y, ds, BATCH_SIZE):
+        for x_batch, y_batch in next_batch(X, Y, ds, BATCH_SIZE_TEST):
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
         # because we normalized the input data we need to multiply the prediction
