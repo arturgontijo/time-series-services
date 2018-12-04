@@ -27,9 +27,6 @@ EPOCHS = 100 if isFast else 2000
 
 
 def generate_my_data(data_file, time_steps, time_shift):
-    """
-    generate sequences to feed to rnn for fct(x)
-    """
     data = pd.read_csv(data_file, dtype=np.float32)
 
     rnn_x = []
