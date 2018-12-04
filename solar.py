@@ -68,8 +68,8 @@ def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_s
             next_test = i + int(len(df) / test_size)
         else:
             current_set = "train"
-        result_x[current_set].append(total)
-        result_y[current_set].append([np.array(df["y"].values[0])])
+        result_x[current_set].append([np.array(total)])
+        result_y[current_set].append([np.array(df["y"].values[i])])
 
     # make result_y a numpy array
     for ds in ["train", "val", "test"]:
