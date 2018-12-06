@@ -67,14 +67,14 @@ def main():
         for i in v:
             my_sax[i] = k
 
-    final_d = {"x": [], "y": []}
+    tmp_d = {"x": [], "y": []}
     for k, v in my_sax.items():
-        num_list = [np.float32(((ord(char) - 96) * alpha_to_num_step) + alpha_to_num_map) for char in v[:-1]]
+        num_list = [np.float32(((ord(char) - 96) * alpha_to_num_step) - alpha_to_num_map) for char in v[:-1]]
         increment_list = []
         for num in num_list:
             increment_list.append(num)
-            final_d["x"].append(np.array(increment_list))
-            final_d["y"].append(np.array([np.float32("".join([str(((ord(char) - 96) * alpha_to_num_step) + alpha_to_num_map) for char in v[-1]]))]))
+            tmp_d["x"].append(np.array(increment_list))
+            tmp_d["y"].append(np.array([np.float32("".join([str(((ord(char) - 96) * alpha_to_num_step) - alpha_to_num_map) for char in v[-1]]))]))
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
@@ -85,14 +85,14 @@ def main():
     #####
 
     result_x = dict()
-    result_x["train"] = final_d["x"][:len(final_d["x"])-2000]
-    result_x["test"] = final_d["x"][len(final_d["x"])-2000:len(final_d["x"])-1000]
-    result_x["val"] = final_d["x"][len(final_d["x"])-1000:len(final_d["x"])]
+    result_x["train"] = tmp_d["x"][:len(tmp_d["x"])-2000]
+    result_x["test"] = tmp_d["x"][len(tmp_d["x"])-2000:len(tmp_d["x"])-1000]
+    result_x["val"] = tmp_d["x"][len(tmp_d["x"])-1000:len(tmp_d["x"])]
 
     result_y = dict()
-    result_y["train"] = np.array(final_d["y"][:len(final_d["y"])-2000])
-    result_y["test"] = np.array(final_d["y"][len(final_d["y"])-2000:len(final_d["y"])-1000])
-    result_y["val"] = np.array(final_d["y"][len(final_d["y"])-1000:len(final_d["y"])])
+    result_y["train"] = np.array(tmp_d["y"][:len(tmp_d["y"])-2000])
+    result_y["test"] = np.array(tmp_d["y"][len(tmp_d["y"])-2000:len(tmp_d["y"])-1000])
+    result_y["val"] = np.array(tmp_d["y"][len(tmp_d["y"])-1000:len(tmp_d["y"])])
 
     batch_size = window_len * (word_len - 1)
     h_dims = word_len
