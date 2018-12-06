@@ -95,29 +95,27 @@ def main():
     result_y["test"] = np.array(final_d["y"][len(final_d["y"])-2000:len(final_d["y"])-1000])
     result_y["val"] = np.array(final_d["y"][len(final_d["y"])-1000:len(final_d["y"])])
 
+    epochs = 100
+    batch_size = window_len * (word_len - 1)
+    h_dims = word_len
+
     epochs = input("Epochs: ")
-    if epochs == "":
-        EPOCHS = 100
-    else:
-        EPOCHS = int(epochs)
+    if not epochs == "":
+        epochs = int(epochs)
 
     start_time = time.time()
 
-    model_file = "{}_epochs.model".format(EPOCHS)
+    model_file = "{}_epochs.model".format(epochs)
 
     if not os.path.exists(model_file):
-        EPOCHS = 100
-        BATCH_SIZE = window_len * (word_len - 1)
-        H_DIMS = word_len
-
         x = C.sequence.input_variable(1)
-        z = create_model(x, H_DIMS)
+        z = create_model(x, h_dims)
         var_l = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
         learning_rate = 0.005
         lr_schedule = C.learning_parameter_schedule(learning_rate)
         loss = C.squared_error(z, var_l)
         error = C.squared_error(z, var_l)
-        momentum_schedule = C.momentum_schedule(0.9, minibatch_size=BATCH_SIZE)
+        momentum_schedule = C.momentum_schedule(0.9, minibatch_size=batch_size)
         learner = C.fsadagrad(z.parameters,
                               lr=lr_schedule,
                               momentum=momentum_schedule)
@@ -127,11 +125,11 @@ def main():
         loss_summary = []
 
         start = time.time()
-        for epoch in range(0, EPOCHS):
-            for x_batch, l_batch in next_batch(result_x, result_y, "train", BATCH_SIZE):
+        for epoch in range(0, epochs):
+            for x_batch, l_batch in next_batch(result_x, result_y, "train", batch_size):
                 trainer.train_minibatch({x: x_batch, var_l: l_batch})
 
-            if epoch % (EPOCHS / 10) == 0:
+            if epoch % (epochs / 10) == 0:
                 training_loss = trainer.previous_minibatch_loss_average
                 loss_summary.append(training_loss)
                 print("epoch: {}, loss: {:.4f}".format(epoch, training_loss))
@@ -140,7 +138,7 @@ def main():
 
         # Print the train, validation and test errors
         for label_txt in ["train", "val", "test"]:
-            print("mse for {}: {:.6f}".format(label_txt, get_mse(trainer, x, result_x, result_y, BATCH_SIZE, var_l, label_txt)))
+            print("mse for {}: {:.6f}".format(label_txt, get_mse(trainer, x, result_x, result_y, batch_size, var_l, label_txt)))
 
         z.save("test.model")
 
@@ -160,7 +158,7 @@ def main():
         fig = plt.figure()
         a = fig.add_subplot(2, 1, 1)
         results = []
-        for x_batch, y_batch in next_batch(result_x, result_y, ds, BATCH_SIZE):
+        for x_batch, y_batch in next_batch(result_x, result_y, ds, batch_size):
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
         # because we normalized the input data we need to multiply the prediction
@@ -169,7 +167,7 @@ def main():
         a.plot(np.array(results), label=ds + " pred")
         a.legend()
 
-        fig.savefig("{}_chart_{}_epochs.jpg".format(ds, EPOCHS))
+        fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
 
         print("Delta: ", time.time() - start_time)
 
