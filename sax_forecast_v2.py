@@ -93,7 +93,7 @@ def main():
     #####
 
     # Separate Dataset into train (80%), val (10%) and test (10%)
-    pos_train = int(len(tmp_d["x"]) * 0.8)
+    pos_train = int(len(tmp_d["x"]) * 0.94)
     pos_train = int(pos_train / window_len) * window_len
 
     pos_val = len(tmp_d["x"][pos_train:]) / 2
