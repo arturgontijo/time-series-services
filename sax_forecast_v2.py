@@ -51,7 +51,11 @@ def main():
     alphabet_len = int(input("alphabet_len: "))
 
     alpha_to_num_step = float(1 / alphabet_len)
-    alpha_to_num_map = float(alpha_to_num_step / 2)
+    alpha_to_num_shift = float(alpha_to_num_step / 2)
+
+    alpha_to_num = dict()
+    for i in range(alphabet_len):
+        alpha_to_num[chr(97+i)] = (alpha_to_num_step * i) + alpha_to_num_shift
 
     source = "weather_JAN.csv"
     ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
@@ -69,12 +73,12 @@ def main():
 
     tmp_d = {"x": [], "y": []}
     for k, v in my_sax.items():
-        num_list = [np.float32(((ord(char) - 96) * alpha_to_num_step) - alpha_to_num_map) for char in v[:-1]]
+        num_list = [np.float32(alpha_to_num[char] for char in v[:-1])]
         increment_list = []
         for num in num_list:
             increment_list.append(num)
             tmp_d["x"].append(np.array(increment_list))
-            tmp_d["y"].append(np.array([np.float32("".join([str(((ord(char) - 96) * alpha_to_num_step) - alpha_to_num_map) for char in v[-1]]))]))
+            tmp_d["y"].append(np.array([np.float32(alpha_to_num[char] for char in v[-1])]))
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
@@ -84,15 +88,20 @@ def main():
     # result_x[4] = [1,4,2,2,4] result_y[4] = 3
     #####
 
+    # Separate Dataset into train (80%), val (10%) and test (10%)
+    pos_train = len(tmp_d["x"]) * 0.8
+    pos_val = pos_train + len(tmp_d["x"]) * 0.1
+    pos_test = pos_val + len(tmp_d["x"])
+
     result_x = dict()
-    result_x["train"] = tmp_d["x"][:len(tmp_d["x"])-2000]
-    result_x["test"] = tmp_d["x"][len(tmp_d["x"])-2000:len(tmp_d["x"])-1000]
-    result_x["val"] = tmp_d["x"][len(tmp_d["x"])-1000:len(tmp_d["x"])]
+    result_x["train"] = tmp_d["x"][:pos_train]
+    result_x["val"] = tmp_d["x"][pos_train:pos_val]
+    result_x["test"] = tmp_d["x"][pos_test:len(tmp_d["x"])]
 
     result_y = dict()
-    result_y["train"] = np.array(tmp_d["y"][:len(tmp_d["y"])-2000])
-    result_y["test"] = np.array(tmp_d["y"][len(tmp_d["y"])-2000:len(tmp_d["y"])-1000])
-    result_y["val"] = np.array(tmp_d["y"][len(tmp_d["y"])-1000:len(tmp_d["y"])])
+    result_y["train"] = np.array(tmp_d["y"][:pos_train])
+    result_y["val"] = np.array(tmp_d["y"][pos_train:pos_val])
+    result_y["test"] = np.array(tmp_d["y"][pos_val:len(tmp_d["y"])])
 
     batch_size = window_len * (word_len - 1)
     h_dims = word_len

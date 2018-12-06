@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import time
 from pandas_datareader import data as pd_data
-import datetime
+
 from saxpy.sax import sax_via_window
 
 import os
@@ -12,10 +12,6 @@ try:
     from urllib.request import urlretrieve
 except ImportError:
     from urllib import urlretrieve
-
-from saxpy.sax import ts_to_string
-from saxpy.alphabet import cuts_for_asize
-from saxpy.znorm import znorm
 
 import matplotlib
 matplotlib.use("Agg")
@@ -54,6 +50,9 @@ def main():
     word_len = int(input("word_len: "))
     alphabet_len = int(input("alphabet_len: "))
 
+    alpha_to_num_step = float(1 / alphabet_len)
+    alpha_to_num_map = float(alpha_to_num_step / 2)
+
     source = "weather_JAN.csv"
     ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
     sax_ret = sax_via_window(ts_data["temp"].values,
@@ -68,14 +67,14 @@ def main():
         for i in v:
             my_sax[i] = k
 
-    final_d = {"x": [], "y": []}
+    tmp_d = {"x": [], "y": []}
     for k, v in my_sax.items():
-        num_list = [np.float32(ord(char) - 96) for char in v[:-1]]
+        num_list = [np.float32(((ord(char) - 96) * alpha_to_num_step) - alpha_to_num_map) for char in v[:-1]]
         increment_list = []
         for num in num_list:
             increment_list.append(num)
-            final_d["x"].append(np.array(increment_list))
-            final_d["y"].append(np.array([np.float32("".join([str(ord(char) - 96) for char in v[-1]]))]))
+            tmp_d["x"].append(np.array(increment_list))
+            tmp_d["y"].append(np.array([np.float32("".join([str(((ord(char) - 96) * alpha_to_num_step) - alpha_to_num_map) for char in v[-1]]))]))
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
@@ -86,22 +85,23 @@ def main():
     #####
 
     result_x = dict()
-    result_x["train"] = final_d["x"][:len(final_d["x"])-2000]
-    result_x["test"] = final_d["x"][len(final_d["x"])-2000:len(final_d["x"])-1000]
-    result_x["val"] = final_d["x"][len(final_d["x"])-1000:len(final_d["x"])]
+    result_x["train"] = tmp_d["x"][:len(tmp_d["x"])-2000]
+    result_x["test"] = tmp_d["x"][len(tmp_d["x"])-2000:len(tmp_d["x"])-1000]
+    result_x["val"] = tmp_d["x"][len(tmp_d["x"])-1000:len(tmp_d["x"])]
 
     result_y = dict()
-    result_y["train"] = np.array(final_d["y"][:len(final_d["y"])-2000])
-    result_y["test"] = np.array(final_d["y"][len(final_d["y"])-2000:len(final_d["y"])-1000])
-    result_y["val"] = np.array(final_d["y"][len(final_d["y"])-1000:len(final_d["y"])])
+    result_y["train"] = np.array(tmp_d["y"][:len(tmp_d["y"])-2000])
+    result_y["test"] = np.array(tmp_d["y"][len(tmp_d["y"])-2000:len(tmp_d["y"])-1000])
+    result_y["val"] = np.array(tmp_d["y"][len(tmp_d["y"])-1000:len(tmp_d["y"])])
 
-    epochs = 100
     batch_size = window_len * (word_len - 1)
     h_dims = word_len
 
     epochs = input("Epochs: ")
     if not epochs == "":
         epochs = int(epochs)
+    else:
+        epochs = 100
 
     start_time = time.time()
 
@@ -140,7 +140,7 @@ def main():
         for label_txt in ["train", "val", "test"]:
             print("mse for {}: {:.6f}".format(label_txt, get_mse(trainer, x, result_x, result_y, batch_size, var_l, label_txt)))
 
-        z.save("test.model")
+        z.save(model_file)
 
     else:
         z = C.load_model(model_file)
@@ -152,6 +152,7 @@ def main():
     for n in node_outputs:
         print("  {}".format(n))
 
+    results = []
     # predict
     # f, a = plt.subplots(2, 1, figsize=(12, 8))
     for j, ds in enumerate(["val", "test"]):
@@ -169,8 +170,10 @@ def main():
 
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
 
-        print("Delta: ", time.time() - start_time)
+    print("Delta: ", time.time() - start_time)
+
+    return result_x, result_y, results
 
 
 if __name__ == '__main__':
-    main()
+    r_x, r_y, r_test_pred = main()
