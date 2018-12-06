@@ -216,16 +216,16 @@ def main():
             print("{}: {} == {} ({})".format(idx,
                                              round(last_p_result[idx], 4),
                                              round(float(last_p_y[idx][0]), 4),
-                                             abs(round(last_p_result[idx], 4) - round(float(last_p_y[idx][0]), 4))))
+                                             abs(round(last_p_result[idx] - float(last_p_y[idx][0]), 4))))
             for stp in range(alphabet_len):
-                if round(last_p_result[idx], 4) + (stp * alpha_to_num_step) == round(float(last_p_y[idx][0]), 4):
+                if round(last_p_result[idx] + (stp * alpha_to_num_step), 4) == round(float(last_p_y[idx][0]), 4):
                     print("(+)stp: ", stp)
                     if stp in correct_pred:
                         correct_pred[stp] += 1
                     else:
                         correct_pred[stp] = 1
                     break
-                if round(last_p_result[idx], 4) - (stp * alpha_to_num_step) == round(float(last_p_y[idx][0]), 4):
+                if round(last_p_result[idx] - (stp * alpha_to_num_step), 4) == round(float(last_p_y[idx][0]), 4):
                     print("(-)stp: ", stp)
                     if stp in correct_pred:
                         correct_pred[stp] += 1
