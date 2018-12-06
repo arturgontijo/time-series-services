@@ -17,6 +17,10 @@ from saxpy.sax import ts_to_string
 from saxpy.alphabet import cuts_for_asize
 from saxpy.znorm import znorm
 
+import matplotlib
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
+
 
 def next_batch(x, y, ds, batch_size):
     """get the next batch for training"""
@@ -174,9 +178,19 @@ def main():
     result_y["test"] = np.array(final_d["y"][len(final_d["y"])-1000:len(final_d["y"])-500])
     result_y["val"] = np.array(final_d["y"][len(final_d["y"])-500:len(final_d["y"])])
 
-    solar_x, solar_y = generate_solar_data("https://www.cntk.ai/jup/dat/solar.csv", 14, normalize=20000)
+    # solar_x, solar_y = generate_solar_data("https://www.cntk.ai/jup/dat/solar.csv", 14, normalize=20000)
 
-    if input("Train? ") == "y":
+    epochs = input("Epochs: ")
+    if epochs == "":
+        EPOCHS = 100
+    else:
+        EPOCHS = int(epochs)
+
+    start_time = time.time()
+
+    model_file = "{}_epochs.model".format(EPOCHS)
+
+    if not os.path.exists(model_file):
         EPOCHS = 100
         BATCH_SIZE = window_len * 10
         H_DIMS = word_len
@@ -199,7 +213,6 @@ def main():
 
         start = time.time()
         for epoch in range(0, EPOCHS):
-            print("EPOCHS: ", EPOCHS)
             for x_batch, l_batch in next_batch(result_x, result_y, "train", BATCH_SIZE):
                 trainer.train_minibatch({x: x_batch, var_l: l_batch})
 
@@ -211,13 +224,40 @@ def main():
         print("Training took {:.1f} sec".format(time.time() - start))
 
         # Print the train, validation and test errors
-        for labeltxt in ["train", "val", "test"]:
-            print("mse for {}: {:.6f}".format(labeltxt, get_mse(trainer, x, result_x, result_y, BATCH_SIZE, var_l, labeltxt)))
+        for label_txt in ["train", "val", "test"]:
+            print("mse for {}: {:.6f}".format(label_txt, get_mse(trainer, x, result_x, result_y, BATCH_SIZE, var_l, label_txt)))
 
         z.save("test.model")
 
-    return result_x, result_y, solar_x, solar_y
+    else:
+        z = C.load_model(model_file)
+        x = C.logging.find_all_with_name(z, "")[-1]
+
+    # Print out all layers in the model
+    print("Loading {} and printing all nodes:".format(model_file))
+    node_outputs = C.logging.find_all_with_name(z, "")
+    for n in node_outputs:
+        print("  {}".format(n))
+
+    # predict
+    # f, a = plt.subplots(2, 1, figsize=(12, 8))
+    for j, ds in enumerate(["val", "test"]):
+        fig = plt.figure()
+        a = fig.add_subplot(2, 1, 1)
+        results = []
+        for x_batch, y_batch in next_batch(result_x, result_y, ds, BATCH_SIZE):
+            pred = z.eval({x: x_batch})
+            results.extend(pred[:, 0])
+        # because we normalized the input data we need to multiply the prediction
+        # with SCALER to get the real values.
+        a.plot((result_y[ds]).flatten(), label=ds + " raw")
+        a.plot(np.array(results), label=ds + " pred")
+        a.legend()
+
+        fig.savefig("{}_chart_{}_epochs.jpg".format(ds, EPOCHS))
+
+        print("Delta: ", time.time() - start_time)
 
 
 if __name__ == '__main__':
-    result_x, result_y, solar_x, solar_y = main()
+    main()
