@@ -152,13 +152,19 @@ def main():
             if epoch % (epochs / 10) == 0:
                 training_loss = trainer.previous_minibatch_loss_average
                 loss_summary.append(training_loss)
-                print("epoch: {}, loss: {:.4f}".format(epoch, training_loss))
+                print("epoch: {}, loss: {:.4f} [time: {}s]".format(epoch, training_loss, time.time() - start_time))
 
         print("Training took {:.1f} sec".format(time.time() - start))
 
         # Print the train, validation and test errors
         for label_txt in ["train", "val", "test"]:
-            print("mse for {}: {:.6f}".format(label_txt, get_mse(trainer, x, result_x, result_y, batch_size, var_l, label_txt)))
+            print("mse for {}: {:.6f}".format(label_txt, get_mse(trainer,
+                                                                 x,
+                                                                 result_x,
+                                                                 result_y,
+                                                                 batch_size,
+                                                                 var_l,
+                                                                 label_txt)))
 
         z.save(model_file)
 
