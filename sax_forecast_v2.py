@@ -57,7 +57,9 @@ def main():
     alpha_to_num = dict()
     for i in range(alphabet_len):
         step = (alpha_to_num_step * i)
-        alpha_to_num[chr(97+i)] = [step, step + alpha_to_num_shift, step + alpha_to_num_step]
+        alpha_to_num[chr(97+i)] = [round(step, 4),
+                                   round(step + alpha_to_num_shift, 4),
+                                   round(step + alpha_to_num_step, 4)]
 
     source = "weather_JAN.csv"
     ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
@@ -216,7 +218,9 @@ def main():
             if round(last_p_result[idx], 4) == round(last_p_y[idx][0], 4):
                 correct_pred_avg += 1
 
-        print("Avg Set({}): {}/{} = {:.2f}".format(ds, correct_pred_avg, len(last_p_y),
+        print("Avg Set({}): {}/{} = {:.2f}".format(ds,
+                                                   correct_pred_avg,
+                                                   len(last_p_y),
                                                    float(correct_pred_avg / len(last_p_y))))
 
         last_p_result = []
@@ -246,8 +250,13 @@ def main():
             if round(last_p_result[idx], 4) == round(last_p_y[idx][0], 4):
                 correct_pred_last += 1
 
-        print("Last Set({}): {}/{} = {:.2f}".format(ds, correct_pred_last, len(last_p_y),
+        print("Last Set({}): {}/{} = {:.2f}".format(ds,
+                                                    correct_pred_last,
+                                                    len(last_p_y),
                                                     float(correct_pred_last / len(last_p_y))))
+
+    for k, v in alpha_to_num.items():
+        print(k, v)
 
     print("Delta: ", time.time() - start_time)
 
