@@ -186,6 +186,7 @@ def main():
             if (idx + 1) % (word_len - 1) == 0:
                 last_p_y.append(i)
 
+        print("last_p_y: ", last_p_y)
         chart.plot(np.array(last_p_y).flatten(), label=ds + " raw")
 
         sum_results = 0
