@@ -172,8 +172,8 @@ def main():
 
     print("Delta: ", time.time() - start_time)
 
-    return results
+    return results, result_x, result_y
 
 
 if __name__ == '__main__':
-    r = main()
+    r_x, r_y, r_test_pred = main()
