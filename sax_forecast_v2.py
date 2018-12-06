@@ -200,7 +200,7 @@ def main():
 
         last_p_result = []
         for idx, i in enumerate(results):
-            if idx % (word_len - 2) == 0:
+            if (idx + 1) % (word_len - 1) == 0:
                 norm_i = -1
                 for k, v in alpha_to_num.items():
                     if i < v[0]:
