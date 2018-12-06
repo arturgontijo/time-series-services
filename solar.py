@@ -193,10 +193,8 @@ def generate_solar_data_old(input_url, time_steps, normalize=1, val_size=0.1, te
 
 def next_batch(x, y, ds, batch_size):
     """get the next batch for training"""
-
     def as_batch(data, start, count):
         return data[start:start + count]
-
     for i in range(0, len(x[ds]), batch_size):
         yield as_batch(x[ds], i, batch_size), as_batch(y[ds], i, batch_size)
 
