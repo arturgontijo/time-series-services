@@ -241,7 +241,8 @@ def main():
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
 
         correct_pred_last = 0
-        for idx, i in enumerate(last_p_result):
+        for idx, _ in enumerate(last_p_result):
+            print("{}: {} == {}".format(idx, round(last_p_result[idx], 4), round(last_p_y[idx][0], 4)))
             if round(last_p_result[idx], 4) == round(last_p_y[idx][0], 4):
                 correct_pred_last += 1
 
