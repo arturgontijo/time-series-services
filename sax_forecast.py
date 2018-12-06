@@ -107,7 +107,7 @@ def main():
 
     if not os.path.exists(model_file):
         EPOCHS = 100
-        BATCH_SIZE = window_len * 10
+        BATCH_SIZE = window_len * word_len
         H_DIMS = word_len
 
         x = C.sequence.input_variable(1)
