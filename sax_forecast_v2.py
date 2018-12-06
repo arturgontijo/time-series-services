@@ -53,9 +53,11 @@ def main():
     alpha_to_num_step = float(1 / alphabet_len)
     alpha_to_num_shift = float(alpha_to_num_step / 2)
 
+    # Dict = [floor, point, celling]
     alpha_to_num = dict()
     for i in range(alphabet_len):
-        alpha_to_num[chr(97+i)] = (alpha_to_num_step * i) + alpha_to_num_shift
+        step = (alpha_to_num_step * i)
+        alpha_to_num[chr(97+i)] = [step, step + alpha_to_num_shift, step + alpha_to_num_step]
 
     source = "weather_JAN.csv"
     ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
@@ -73,12 +75,12 @@ def main():
 
     tmp_d = {"x": [], "y": []}
     for k, v in my_sax.items():
-        num_list = [np.float32(alpha_to_num[char]) for char in v[:-1]]
+        num_list = [np.float32(alpha_to_num[char][1]) for char in v[:-1]]
         increment_list = []
         for num in num_list:
             increment_list.append(num)
             tmp_d["x"].append(np.array(increment_list))
-            tmp_d["y"].append(np.array([np.float32(alpha_to_num[char]) for char in v[-1]]))
+            tmp_d["y"].append(np.array([np.float32(alpha_to_num[char][1]) for char in v[-1]]))
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
@@ -175,10 +177,37 @@ def main():
         for x_batch, y_batch in next_batch(result_x, result_y, ds, batch_size):
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
-        # because we normalized the input data we need to multiply the prediction
-        # with SCALER to get the real values.
-        a.plot((result_y[ds]).flatten(), label=ds + " raw")
-        a.plot(np.array(results), label=ds + " pred")
+
+        # a.plot((result_y[ds]).flatten(), label=ds + " raw")
+        # a.plot(np.array(results), label=ds + " pred")
+
+        last_p_result = []
+        for idx, i in enumerate(result_y[ds]):
+            if idx % (word_len - 2) == 0:
+                norm_i = -1
+                for k, v in alpha_to_num.items():
+                    if v[0] <= i < v[2]:
+                        norm_i = v[1]
+                        break
+                    elif i >= 1:
+                        norm_i = v[1]
+                last_p_result.append(norm_i)
+
+        a.plot(np.array(last_p_result).flatten(), label=ds + " raw")
+
+        last_p_result = []
+        for idx, i in enumerate(results):
+            if idx % (word_len - 2) == 0:
+                norm_i = -1
+                for k, v in alpha_to_num.items():
+                    if v[0] <= i < v[2]:
+                        norm_i = v[1]
+                        break
+                    elif i >= 1:
+                        norm_i = v[1]
+                last_p_result.append(norm_i)
+
+        a.plot(np.array(last_p_result), label=ds + " pred")
         a.legend()
 
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
