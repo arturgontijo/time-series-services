@@ -189,40 +189,7 @@ def main():
             if (idx + 1) % (word_len - 1) == 0:
                 last_p_y.append(i)
 
-        print("last_p_y: ", last_p_y[0][0])
         chart.plot(np.array(last_p_y).flatten(), label=ds + " raw")
-
-        sum_results = 0
-        last_p_result = []
-        for idx, i in enumerate(results):
-            sum_results += i
-            if (idx + 1) % (word_len - 1) == 0:
-                i = sum_results / (word_len - 1)
-                alpha_list = sorted(alpha_to_num)
-                norm_i = -1
-                for a in alpha_list:
-                    if i < alpha_to_num[a][0]:
-                        norm_i = alpha_to_num[a][1]
-                        break
-                    elif alpha_to_num[a][0] <= i < alpha_to_num[a][2]:
-                        norm_i = alpha_to_num[a][1]
-                        break
-                    else:
-                        norm_i = alpha_to_num[a][1]
-                last_p_result.append(norm_i)
-                sum_results = 0
-
-        chart.plot(np.array(last_p_result), label=ds + "Avg pred")
-
-        correct_pred_avg = 0
-        for idx, i in enumerate(last_p_result):
-            if round(last_p_result[idx], 4) == round(float(last_p_y[idx][0]), 4):
-                correct_pred_avg += 1
-
-        print("Avg Set({}): {}/{} = {:.2f}".format(ds,
-                                                   correct_pred_avg,
-                                                   len(last_p_y),
-                                                   float(correct_pred_avg / len(last_p_y))))
 
         last_p_result = []
         for idx, i in enumerate(results):
@@ -245,19 +212,22 @@ def main():
 
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
 
-        correct_pred_last = 0
+        correct_pred = dict()
         for idx, _ in enumerate(last_p_result):
             print("{}: {} == {} ({})".format(idx,
                                              round(last_p_result[idx], 4),
                                              round(float(last_p_y[idx][0]), 4),
                                              round(last_p_result[idx], 4) == round(float(last_p_y[idx][0]), 4)))
-            if round(last_p_result[idx], 4) == round(float(last_p_y[idx][0]), 4):
-                correct_pred_last += 1
+            for stp in range(alphabet_len):
+                if round(last_p_result[idx], 4) + (stp * alpha_to_num_step) == round(float(last_p_y[idx][0]), 4):
+                    correct_pred[stp] += 1
 
-        print("Last Set({}): {}/{} = {:.2f}".format(ds,
-                                                    correct_pred_last,
-                                                    len(last_p_y),
-                                                    float(correct_pred_last / len(last_p_y))))
+        for k, v in correct_pred.items():
+            print("Set({}) Delta[{}]: {}/{} = {:.2f}".format(ds,
+                                                             k,
+                                                             v,
+                                                             len(last_p_y),
+                                                             float(v / len(last_p_y))))
 
     for k, v in alpha_to_num.items():
         print(k, v)
