@@ -188,13 +188,39 @@ def main():
 
         chart.plot(np.array(last_p_y).flatten(), label=ds + " raw")
 
-        print("len(result_y[ds]) = ", len(result_y[ds]))
-        print("len(results) = ", len(results))
+        sum_results = 0
+        last_p_result = []
+        for idx, i in enumerate(results):
+            sum_results += i
+            if (idx + 1) % (word_len - 1) == 0:
+                i = sum_results / (word_len - 1)
+                alpha_list = sorted(alpha_to_num)
+                norm_i = -1
+                for a in alpha_list:
+                    if i < alpha_to_num[a][0]:
+                        norm_i = alpha_to_num[a][1]
+                        break
+                    elif alpha_to_num[a][0] <= i < alpha_to_num[a][2]:
+                        norm_i = alpha_to_num[a][1]
+                        break
+                    else:
+                        norm_i = alpha_to_num[a][1]
+                last_p_result.append(norm_i)
+                sum_results = 0
+
+        chart.plot(np.array(last_p_result), label=ds + "Avg pred")
+
+        correct_pred_avg = 0
+        for idx, i in enumerate(last_p_result):
+            if round(last_p_result[idx], 4) == round(last_p_y[idx], 4):
+                correct_pred_avg += 1
+
+        print("Avg Set({}): {}/{} = {:.2f}".format(ds, correct_pred_avg, len(last_p_y),
+                                                   float(correct_pred_avg / len(last_p_y))))
 
         last_p_result = []
         for idx, i in enumerate(results):
             if (idx + 1) % (word_len - 1) == 0:
-                print("results[{}] = {}".format(idx, i))
                 alpha_list = sorted(alpha_to_num)
                 norm_i = -1
                 for a in alpha_list:
@@ -208,22 +234,18 @@ def main():
                         norm_i = alpha_to_num[a][1]
                 last_p_result.append(norm_i)
 
-        print("len(last_p_result) = ", len(last_p_result))
-
-        chart.plot(np.array(last_p_result), label=ds + " pred")
+        chart.plot(np.array(last_p_result), label=ds + "Last pred")
         chart.legend()
 
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
 
-        for k, v in alpha_to_num.items():
-            print(k, v)
-
-        correct_pred = 0
+        correct_pred_last = 0
         for idx, i in enumerate(last_p_result):
-            if last_p_result[idx] == last_p_y[idx]:
-                correct_pred += 1
+            if round(last_p_result[idx], 4) == round(last_p_y[idx], 4):
+                correct_pred_last += 1
 
-        print("Set({}): {}/{} = {:.2f}".format(ds, correct_pred, len(last_p_y), float(correct_pred / len(last_p_y))))
+        print("Last Set({}): {}/{} = {:.2f}".format(ds, correct_pred_last, len(last_p_y),
+                                                    float(correct_pred_last / len(last_p_y))))
 
     print("Delta: ", time.time() - start_time)
 
