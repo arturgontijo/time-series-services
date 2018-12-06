@@ -178,22 +178,15 @@ def main():
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
 
-        chart.plot((result_y[ds]).flatten(), label=ds + " raw")
+        # chart.plot((result_y[ds]).flatten(), label=ds + " raw")
         # chart.plot(np.array(results), label=ds + " pred")
 
-        # last_p_y = []
-        # for idx, i in enumerate(result_y[ds]):
-        #     if idx % (word_len - 2) == 0:
-        #         norm_i = -1
-        #         for k, v in alpha_to_num.items():
-        #             if v[0] <= i < v[2]:
-        #                 norm_i = v[1]
-        #                 break
-        #             elif i >= 1:
-        #                 norm_i = v[1]
-        #         last_p_y.append(norm_i)
-        #
-        # a.plot(np.array(last_p_y).flatten(), label=ds + " raw")
+        last_p_y = []
+        for idx, i in enumerate(result_y[ds]):
+            if (idx + 1) % (word_len - 1) == 0:
+                last_p_y.append(i)
+
+        chart.plot(np.array(last_p_y).flatten(), label=ds + " raw")
 
         print("len(result_y[ds]) = ", len(result_y[ds]))
         print("len(results) = ", len(results))
@@ -213,10 +206,7 @@ def main():
                         break
                     else:
                         norm_i = alpha_to_num[a][1]
-
-                print("norm_i = {}".format(norm_i))
-                for _ in range(word_len - 1):
-                    last_p_result.append(norm_i)
+                last_p_result.append(norm_i)
 
         print("len(last_p_result) = ", len(last_p_result))
 
@@ -230,10 +220,10 @@ def main():
 
         correct_pred = 0
         for idx, i in enumerate(last_p_result):
-            if last_p_result[idx] == result_y[ds][idx]:
+            if last_p_result[idx] == last_p_y[idx]:
                 correct_pred += 1
 
-        print("Set({}): {}/{} = {:.2f}".format(ds, correct_pred, len(result_y[ds]), float(correct_pred / len(result_y[ds]))))
+        print("Set({}): {}/{} = {:.2f}".format(ds, correct_pred, len(last_p_y), float(correct_pred / len(last_p_y))))
 
     print("Delta: ", time.time() - start_time)
 
