@@ -223,6 +223,9 @@ def main():
         a.legend()
 
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
+        
+        for k, v in alpha_to_num.items():
+            print(k, v)
 
         correct_pred = 0
         for idx, i in enumerate(last_p_result):
