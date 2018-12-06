@@ -205,7 +205,10 @@ def main():
                         break
                     elif i >= 1:
                         norm_i = v[1]
-                for i in range(word_len - 1):
+                if norm_i == -1:
+                    print("ERROR(results[{}]) = {}".format(idx, i))
+                    norm_i = 0
+                for _ in range(word_len - 1):
                     last_p_result.append(norm_i)
 
         a.plot(np.array(last_p_result), label=ds + " pred")
