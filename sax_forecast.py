@@ -49,93 +49,10 @@ def create_model(x_local, h_dims):
         return m
 
 
-def generate_solar_data(input_url, time_steps, normalize=1, val_size=0.1, test_size=0.1):
-    """
-    generate sequences to feed to rnn based on data frame with solar panel data
-    the csv has the format: time ,solar.current, solar.total
-     (solar.current is the current output in Watt, solar.total is the total production
-      for the day so far in Watt hours)
-    """
-    # try to find the data file local. If it doesn"t exists download it.
-    if "http://" in input_url or "https://" in input_url:
-        cache_path = os.path.join("data", "iot")
-        cache_file = os.path.join(cache_path, "solar.csv")
-        if not os.path.exists(cache_path):
-            os.makedirs(cache_path)
-        if not os.path.exists(cache_file):
-            urlretrieve(input_url, cache_file)
-            print("downloaded data successfully from ", input_url)
-        else:
-            print("using cache for ", input_url)
-    else:
-        cache_file = input_url
-
-    df = pd.read_csv(cache_file, index_col="time", parse_dates=["time"], dtype=np.float32)
-
-    df["date"] = df.index.date
-
-    # normalize data
-    df["solar.current"] /= normalize
-    df["solar.total"] /= normalize
-
-    # group by day, find the max for a day and add a new column .max
-    grouped = df.groupby(df.index.date).max()
-    grouped.columns = ["solar.current.max", "solar.total.max", "date"]
-
-    # merge continuous readings and daily max values into a single frame
-    df_merged = pd.merge(df, grouped, right_index=True, on="date")
-    df_merged = df_merged[["solar.current", "solar.total",
-                           "solar.current.max", "solar.total.max"]]
-    # we group by day so we can process a day at a time.
-    grouped = df_merged.groupby(df_merged.index.date)
-    per_day = []
-    for _, group in grouped:
-        per_day.append(group)
-
-    # split the dataset into train, validation and test sets on day boundaries
-    val_size = int(len(per_day) * val_size)
-    test_size = int(len(per_day) * test_size)
-    next_val = 0
-    next_test = 0
-
-    result_x = {"train": [], "val": [], "test": []}
-    result_y = {"train": [], "val": [], "test": []}
-
-    # generate sequences a day at a time
-    for i, day in enumerate(per_day):
-        # if we have less than 8 datapoints for a day we skip over the
-        # day assuming something is missing in the raw data
-        total = day["solar.total"].values
-        if len(total) < 8:
-            continue
-        if i >= next_val:
-            current_set = "val"
-            next_val = i + int(len(per_day) / val_size)
-        elif i >= next_test:
-            current_set = "test"
-            next_test = i + int(len(per_day) / test_size)
-        else:
-            current_set = "train"
-        max_total_for_day = np.array(day["solar.total.max"].values[0])
-        for j in range(2, len(total)):
-            result_x[current_set].append(total[0:j])
-            result_y[current_set].append([max_total_for_day])
-            if j >= time_steps:
-                break
-    # make result_y a numpy array
-    for ds in ["train", "val", "test"]:
-        result_y[ds] = np.array(result_y[ds])
-    return result_x, result_y
-
-
 def main():
     window_len = int(input("window_len: "))
     word_len = int(input("word_len: "))
     alphabet_len = int(input("alphabet_len: "))
-
-    # dat = np.array([5, 10, 10, 5, 20, 5, 0, 15, 15, 10, 0, 5, 10, 15, 20, 5, 5, 5, 0, 20, 10, 10, 15, 20, 20, 0, 0, 10, 10, 15])
-    # ts_data = pd_data.DataReader("SPY", "yahoo", "2018-12-01", datetime.datetime.now())
-    # sax_seq = ts_to_string(znorm(ts_data), cuts_for_asize(alphabet_len))
 
     source = "weather_JAN.csv"
     ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
@@ -169,16 +86,14 @@ def main():
     #####
 
     result_x = dict()
-    result_x["train"] = final_d["x"][:len(final_d["x"])-1000]
-    result_x["test"] = final_d["x"][len(final_d["x"])-1000:len(final_d["x"])-500]
-    result_x["val"] = final_d["x"][len(final_d["x"])-500:len(final_d["x"])]
+    result_x["train"] = final_d["x"][:len(final_d["x"])-2000]
+    result_x["test"] = final_d["x"][len(final_d["x"])-2000:len(final_d["x"])-1000]
+    result_x["val"] = final_d["x"][len(final_d["x"])-1000:len(final_d["x"])]
 
     result_y = dict()
-    result_y["train"] = np.array(final_d["y"][:len(final_d["y"])-1000])
-    result_y["test"] = np.array(final_d["y"][len(final_d["y"])-1000:len(final_d["y"])-500])
-    result_y["val"] = np.array(final_d["y"][len(final_d["y"])-500:len(final_d["y"])])
-
-    # solar_x, solar_y = generate_solar_data("https://www.cntk.ai/jup/dat/solar.csv", 14, normalize=20000)
+    result_y["train"] = np.array(final_d["y"][:len(final_d["y"])-2000])
+    result_y["test"] = np.array(final_d["y"][len(final_d["y"])-2000:len(final_d["y"])-1000])
+    result_y["val"] = np.array(final_d["y"][len(final_d["y"])-1000:len(final_d["y"])])
 
     epochs = input("Epochs: ")
     if epochs == "":
