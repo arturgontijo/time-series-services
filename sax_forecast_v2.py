@@ -50,6 +50,8 @@ def main():
     word_len = int(input("word_len: "))
     alphabet_len = int(input("alphabet_len: "))
 
+    train_percent = float(input("Train %: "))
+
     alpha_to_num_step = float(1 / alphabet_len)
     alpha_to_num_shift = float(alpha_to_num_step / 2)
 
@@ -93,7 +95,7 @@ def main():
     #####
 
     # Separate Dataset into train (80%), val (10%) and test (10%)
-    pos_train = int(len(tmp_d["x"]) * 0.94)
+    pos_train = int(len(tmp_d["x"]) * train_percent)
     pos_train = int(pos_train / window_len) * window_len
 
     pos_val = len(tmp_d["x"][pos_train:]) / 2
