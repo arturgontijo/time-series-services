@@ -89,19 +89,23 @@ def main():
     #####
 
     # Separate Dataset into train (80%), val (10%) and test (10%)
-    pos_train = len(tmp_d["x"]) * 0.8
-    pos_val = pos_train + len(tmp_d["x"]) * 0.1
-    pos_test = pos_val + len(tmp_d["x"])
+    pos_train = int(len(tmp_d["x"]) * 0.8)
+    pos_train = int(pos_train / window_len) * window_len
+
+    pos_val = len(tmp_d["x"][pos_train:]) / 2
+    pos_val = pos_train + int(pos_val / window_len) * window_len
+
+    pos_test = pos_val
 
     result_x = dict()
     result_x["train"] = tmp_d["x"][:pos_train]
     result_x["val"] = tmp_d["x"][pos_train:pos_val]
-    result_x["test"] = tmp_d["x"][pos_test:len(tmp_d["x"])]
+    result_x["test"] = tmp_d["x"][pos_test:]
 
     result_y = dict()
     result_y["train"] = np.array(tmp_d["y"][:pos_train])
     result_y["val"] = np.array(tmp_d["y"][pos_train:pos_val])
-    result_y["test"] = np.array(tmp_d["y"][pos_val:len(tmp_d["y"])])
+    result_y["test"] = np.array(tmp_d["y"][pos_val:])
 
     batch_size = window_len * (word_len - 1)
     h_dims = word_len
