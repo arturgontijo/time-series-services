@@ -215,7 +215,7 @@ def main():
 
         correct_pred_avg = 0
         for idx, i in enumerate(last_p_result):
-            if round(last_p_result[idx], 4) == round(last_p_y[idx][0], 4):
+            if round(last_p_result[idx], 4) == round(float(last_p_y[idx][0]), 4):
                 correct_pred_avg += 1
 
         print("Avg Set({}): {}/{} = {:.2f}".format(ds,
