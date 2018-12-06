@@ -206,10 +206,10 @@ def main():
                     if i < v[0]:
                         norm_i = v[1]
                         break
-                    if v[0] <= i < v[2]:
+                    elif v[0] <= i < v[2]:
                         norm_i = v[1]
                         break
-                    elif i >= 1:
+                    else:
                         norm_i = v[1]
 
                 for _ in range(word_len - 1):
@@ -223,7 +223,7 @@ def main():
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
 
         correct_pred = 0
-        for idx, i in enumerate(result_y[ds]):
+        for idx, i in enumerate(last_p_result):
             if last_p_result[idx] == result_y[ds][idx]:
                 correct_pred += 1
 
