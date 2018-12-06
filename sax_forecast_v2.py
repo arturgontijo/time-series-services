@@ -201,6 +201,7 @@ def main():
         last_p_result = []
         for idx, i in enumerate(results):
             if (idx + 1) % (word_len - 1) == 0:
+                print("results[{}] = {}".format(idx, i))
                 norm_i = -1
                 for k, v in alpha_to_num.items():
                     if i < v[0]:
@@ -212,6 +213,7 @@ def main():
                     else:
                         norm_i = v[1]
 
+                print("norm_i = {}".format(norm_i))
                 for _ in range(word_len - 1):
                     last_p_result.append(norm_i)
 
