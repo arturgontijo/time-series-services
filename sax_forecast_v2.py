@@ -172,14 +172,14 @@ def main():
     # f, a = plt.subplots(2, 1, figsize=(12, 8))
     for j, ds in enumerate(["val", "test"]):
         fig = plt.figure()
-        a = fig.add_subplot(2, 1, 1)
+        chart = fig.add_subplot(2, 1, 1)
         results = []
         for x_batch, y_batch in next_batch(result_x, result_y, ds, batch_size):
             pred = z.eval({x: x_batch})
             results.extend(pred[:, 0])
 
-        a.plot((result_y[ds]).flatten(), label=ds + " raw")
-        # a.plot(np.array(results), label=ds + " pred")
+        chart.plot((result_y[ds]).flatten(), label=ds + " raw")
+        # chart.plot(np.array(results), label=ds + " pred")
 
         # last_p_y = []
         # for idx, i in enumerate(result_y[ds]):
@@ -220,8 +220,8 @@ def main():
 
         print("len(last_p_result) = ", len(last_p_result))
 
-        a.plot(np.array(last_p_result), label=ds + " pred")
-        a.legend()
+        chart.plot(np.array(last_p_result), label=ds + " pred")
+        chart.legend()
 
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
 
