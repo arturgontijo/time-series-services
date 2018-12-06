@@ -186,7 +186,7 @@ def main():
             if (idx + 1) % (word_len - 1) == 0:
                 last_p_y.append(i)
 
-        print("last_p_y: ", last_p_y)
+        print("last_p_y: ", last_p_y[0][0])
         chart.plot(np.array(last_p_y).flatten(), label=ds + " raw")
 
         sum_results = 0
@@ -213,7 +213,7 @@ def main():
 
         correct_pred_avg = 0
         for idx, i in enumerate(last_p_result):
-            if round(last_p_result[idx], 4) == round(last_p_y[idx], 4):
+            if round(last_p_result[idx], 4) == round(last_p_y[idx][0], 4):
                 correct_pred_avg += 1
 
         print("Avg Set({}): {}/{} = {:.2f}".format(ds, correct_pred_avg, len(last_p_y),
@@ -242,7 +242,7 @@ def main():
 
         correct_pred_last = 0
         for idx, i in enumerate(last_p_result):
-            if round(last_p_result[idx], 4) == round(last_p_y[idx], 4):
+            if round(last_p_result[idx], 4) == round(last_p_y[idx][0], 4):
                 correct_pred_last += 1
 
         print("Last Set({}): {}/{} = {:.2f}".format(ds, correct_pred_last, len(last_p_y),
