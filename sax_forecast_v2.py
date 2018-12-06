@@ -172,7 +172,7 @@ def main():
 
     print("Delta: ", time.time() - start_time)
 
-    return results, result_x, result_y
+    return result_x, result_y, results
 
 
 if __name__ == '__main__':
