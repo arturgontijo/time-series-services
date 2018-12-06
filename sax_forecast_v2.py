@@ -202,16 +202,17 @@ def main():
         for idx, i in enumerate(results):
             if (idx + 1) % (word_len - 1) == 0:
                 print("results[{}] = {}".format(idx, i))
+                alpha_list = sorted(alpha_to_num)
                 norm_i = -1
-                for k, v in alpha_to_num.items():
-                    if i < v[0]:
-                        norm_i = v[1]
+                for a in alpha_list:
+                    if i < alpha_to_num[a][0]:
+                        norm_i = alpha_to_num[a][1]
                         break
-                    elif v[0] <= i < v[2]:
-                        norm_i = v[1]
+                    elif alpha_to_num[a][0] <= i < alpha_to_num[a][2]:
+                        norm_i = alpha_to_num[a][1]
                         break
                     else:
-                        norm_i = v[1]
+                        norm_i = alpha_to_num[a][1]
 
                 print("norm_i = {}".format(norm_i))
                 for _ in range(word_len - 1):
@@ -223,7 +224,7 @@ def main():
         a.legend()
 
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
-        
+
         for k, v in alpha_to_num.items():
             print(k, v)
 
