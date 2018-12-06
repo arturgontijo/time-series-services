@@ -246,7 +246,10 @@ def main():
 
         correct_pred_last = 0
         for idx, _ in enumerate(last_p_result):
-            print("{}: {} == {}".format(idx, round(last_p_result[idx], 4), round(float(last_p_y[idx][0]), 4)))
+            print("{}: {} == {} ({})".format(idx,
+                                             round(last_p_result[idx], 4),
+                                             round(float(last_p_y[idx][0]), 4),
+                                             round(last_p_result[idx], 4) == round(float(last_p_y[idx][0]), 4)))
             if round(last_p_result[idx], 4) == round(float(last_p_y[idx][0]), 4):
                 correct_pred_last += 1
 
