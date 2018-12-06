@@ -73,12 +73,12 @@ def main():
 
     tmp_d = {"x": [], "y": []}
     for k, v in my_sax.items():
-        num_list = [np.float32(alpha_to_num[char] for char in v[:-1])]
+        num_list = [np.float32(alpha_to_num[char]) for char in v[:-1]]
         increment_list = []
         for num in num_list:
             increment_list.append(num)
             tmp_d["x"].append(np.array(increment_list))
-            tmp_d["y"].append(np.array([np.float32(alpha_to_num[char] for char in v[-1])]))
+            tmp_d["y"].append(np.array([np.float32(alpha_to_num[char]) for char in v[-1]]))
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
