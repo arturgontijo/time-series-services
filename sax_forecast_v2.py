@@ -224,6 +224,12 @@ def main():
                     else:
                         correct_pred[stp] = 1
                     break
+                if round(last_p_result[idx], 4) - (stp * alpha_to_num_step) == round(float(last_p_y[idx][0]), 4):
+                    if stp in correct_pred:
+                        correct_pred[stp] += 1
+                    else:
+                        correct_pred[stp] = 1
+                    break
 
         for k, v in correct_pred.items():
             print("Set({}) Delta[{}]: {}/{} = {:.2f}".format(ds,
