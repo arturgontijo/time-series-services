@@ -195,21 +195,27 @@ def main():
         #
         # a.plot(np.array(last_p_y).flatten(), label=ds + " raw")
 
+        print("len(result_y[ds]) = ", len(result_y[ds]))
+        print("len(results) = ", len(results))
+
         last_p_result = []
         for idx, i in enumerate(results):
             if idx % (word_len - 2) == 0:
                 norm_i = -1
                 for k, v in alpha_to_num.items():
+                    if i < v[0]:
+                        norm_i = v[1]
+                        break
                     if v[0] <= i < v[2]:
                         norm_i = v[1]
                         break
                     elif i >= 1:
                         norm_i = v[1]
-                if norm_i == -1:
-                    print("ERROR(results[{}]) = {}".format(idx, i))
-                    norm_i = 0
+
                 for _ in range(word_len - 1):
                     last_p_result.append(norm_i)
+
+        print("len(last_p_result) = ", len(last_p_result))
 
         a.plot(np.array(last_p_result), label=ds + " pred")
         a.legend()
