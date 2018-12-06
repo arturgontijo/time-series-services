@@ -142,16 +142,19 @@ def main():
                              nr_strategy="none",
                              z_threshold=0.01)
 
-
-    my_sax = {}
+    my_sax = dict()
     for k, v in sax_ret.items():
         for i in v:
             my_sax[i] = k
 
     final_d = {"x": [], "y": []}
     for k, v in my_sax.items():
-        final_d["x"].append(np.float32("".join([str(ord(char) - 96) for char in v[:-1]])))
-        final_d["y"].append(np.float32("".join([str(ord(char) - 96) for char in v[-1]])))
+        num_list = [np.float32(ord(char) - 96) for char in v[:-1]]
+        increment_list = []
+        for num in num_list:
+            increment_list.append(num)
+            final_d["x"].append(np.array(increment_list))
+            final_d["y"].append(np.array([np.float32("".join([str(ord(char) - 96) for char in v[-1]]))]))
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
