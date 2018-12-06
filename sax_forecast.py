@@ -165,9 +165,9 @@ def main():
     #####
 
     result_x = dict()
-    result_x["train"] = np.array(final_d["x"][:len(final_d["x"])-1000])
-    result_x["test"] = np.array(final_d["x"][len(final_d["x"])-1000:len(final_d["x"])-500])
-    result_x["val"] = np.array(final_d["x"][len(final_d["x"])-500:len(final_d["x"])])
+    result_x["train"] = final_d["x"][:len(final_d["x"])-1000]
+    result_x["test"] = final_d["x"][len(final_d["x"])-1000:len(final_d["x"])-500]
+    result_x["val"] = final_d["x"][len(final_d["x"])-500:len(final_d["x"])]
 
     result_y = dict()
     result_y["train"] = np.array(final_d["y"][:len(final_d["y"])-1000])
