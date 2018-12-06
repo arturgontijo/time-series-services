@@ -111,15 +111,15 @@ def main():
     result_y["val"] = np.array(tmp_d["y"][pos_train:pos_val])
     result_y["test"] = np.array(tmp_d["y"][pos_val:])
 
-    # batch_size = window_len * (word_len - 1)
-    batch_size = window_len
-    h_dims = word_len
-
     epochs = input("Epochs: ")
     if not epochs == "":
         epochs = int(epochs)
     else:
         epochs = 100
+
+    # batch_size = window_len * (word_len - 1)
+    batch_size = int(input("batch_size: "))
+    h_dims = word_len
 
     start_time = time.time()
 
