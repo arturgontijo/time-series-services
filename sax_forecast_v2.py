@@ -191,7 +191,7 @@ def main():
                         break
                     elif i >= 1:
                         norm_i = v[1]
-                    last_p_y.append(norm_i)
+                last_p_y.append(norm_i)
 
         a.plot(np.array(last_p_y).flatten(), label=ds + " raw")
 
