@@ -284,7 +284,6 @@ def main():
                                                              v,
                                                              len(last_p_y),
                                                              float(v / len(last_p_y))))
-
     for k, v in alpha_to_num.items():
         print(k, v)
 

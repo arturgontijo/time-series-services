@@ -1,8 +1,10 @@
 import cntk as C
 
 import pandas as pd
+from pandas_datareader import data
 import numpy as np
 import time
+import datetime
 from pandas_datareader import data as pd_data
 
 from saxpy.sax import sax_via_window
@@ -45,29 +47,76 @@ def create_model(x_local, h_dims):
         return m
 
 
-def prepare_data(source, window_len, word_len, alphabet_len, alpha_to_num, train_percent):
+def get_asset_data(source, contract, start_date, end_date):
+    retry_cnt, max_num_retry = 0, 3
+    while retry_cnt < max_num_retry:
+        try:
+            return pd_data.DataReader(contract, source, start_date, end_date)
+        except Exception as e:
+            print(e)
+            retry_cnt += 1
+            time.sleep(np.random.randint(1, 10))
+    print("{} is not reachable".format(source))
+    return []
 
-    ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
-    sax_ret = sax_via_window(ts_data["temp"].values,
-                             window_len,
-                             word_len,
-                             alphabet_size=alphabet_len,
-                             nr_strategy="none",
-                             z_threshold=0.01)
 
+def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent):
+    source = input("Source (1=CSV,2=Finance): ")
+    if source == "1":
+        source = "weather_JAN.csv"
+        ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
+        sax_ret = sax_via_window(ts_data["temp"].values,
+                                 window_len,
+                                 word_len,
+                                 alphabet_size=alphabet_len,
+                                 nr_strategy="none",
+                                 z_threshold=0.01)
+    else:
+        source = input("Remote Source (yahoo): ")
+        if source == "":
+            source = "yahoo"
+
+        contract = input("Contract (SPY): ")
+        if contract == "":
+            contract = "SPY"
+
+        start_date = input("Start Date (2000-01-01): ")
+        if start_date == "":
+            start_date = "2000-01-01"
+
+        end_date = input("End Date (now): ")
+        if end_date == "":
+            end_date = datetime.datetime.now()
+
+        ts_data = get_asset_data(source, contract, start_date, end_date)
+        if "Close" in ts_data:
+            close_tag = "Close"
+        elif "close" in ts_data:
+            close_tag = "close"
+        else:
+            return {"Error": "Couldn't find Close data."}
+        sax_ret = sax_via_window(ts_data[close_tag].values,
+                                 window_len,
+                                 word_len,
+                                 alphabet_size=alphabet_len,
+                                 nr_strategy="none",
+                                 z_threshold=0.01)
     my_sax = dict()
     for k, v in sax_ret.items():
         for i in v:
             my_sax[i] = k
 
     tmp_d = {"x": [], "y": []}
-    for k, v in my_sax.items():
-        num_list = [np.float32(alpha_to_num[char][1]) for char in v[:-1]]
-        increment_list = []
-        for num in num_list:
-            increment_list.append(num)
-            tmp_d["x"].append(np.array(increment_list))
-            tmp_d["y"].append(np.array([np.float32(alpha_to_num[char][1]) for char in v[-1]]))
+    for i in range(len(my_sax)):
+        word = my_sax[i]
+        if i < len(my_sax) - 2:
+            pred = my_sax[i + 1][0]
+            num_list = [np.float32(alpha_to_num[char]) for char in word]
+            increment_list = []
+            for num in num_list:
+                increment_list.append(num)
+                tmp_d["x"].append(np.array(increment_list))
+                tmp_d["y"].append(np.array([np.float32(alpha_to_num[pred])]))
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
@@ -100,9 +149,6 @@ def prepare_data(source, window_len, word_len, alphabet_len, alpha_to_num, train
 
 
 def main():
-    source = input("Source: ")
-    if source == "":
-        source = "weather_JAN.csv"
     window_len = int(input("window_len: "))
     word_len = int(input("word_len: "))
     alphabet_len = int(input("alphabet_len: "))
@@ -119,24 +165,22 @@ def main():
     batch_size = int(input("Batch size: "))
     h_dims = word_len
 
-    r_decimal = 8
-
-    alpha_to_num_step = round(float(1 / alphabet_len), r_decimal)
-    alpha_to_num_shift = round(float(alpha_to_num_step / 2), r_decimal)
+    alpha_to_num_step = float(1 / alphabet_len)
+    alpha_to_num_shift = float(alpha_to_num_step / 2)
 
     # Dict = [floor, point, celling]
     alpha_to_num = dict()
     for i in range(alphabet_len):
         step = (alpha_to_num_step * i)
-        alpha_to_num[chr(97 + i)] = [round(step, r_decimal),
-                                     round(step + alpha_to_num_shift, r_decimal),
-                                     round(step + alpha_to_num_step, r_decimal)]
+        alpha_to_num[chr(97 + i)] = [step,
+                                     step + alpha_to_num_shift,
+                                     step + alpha_to_num_step]
 
     model_file = "{}_{}_{}_{}.model".format(window_len, word_len, alphabet_len, epochs)
-    if input("Change model name? [{}]? ".format(model_file)) == "y":
+    if input("Change model name [{}]? ".format(model_file)) == "y":
         model_file = input("Model filename: ")
 
-    x, y = prepare_data(source, window_len, word_len, alphabet_len, alpha_to_num, train_percent)
+    x, y = prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent)
 
     if input("Training? ") == "y":
         input_node = C.sequence.input_variable(1)
@@ -212,15 +256,10 @@ def main():
             if (idx + 1) % (word_len - 1) == 0:
                 alpha_list = sorted(alpha_to_num)
                 norm_i = -1
-                for a in alpha_list:
-                    if i < alpha_to_num[a][0]:
+                for a in alpha_list[::-1]:
+                    if i >= alpha_to_num[a][0]:
                         norm_i = alpha_to_num[a][1]
                         break
-                    elif alpha_to_num[a][0] <= i < alpha_to_num[a][2]:
-                        norm_i = alpha_to_num[a][1]
-                        break
-                    else:
-                        norm_i = alpha_to_num[a][1]
                 last_p_result.append(norm_i)
 
         chart.plot(np.array(last_p_result), label=ds + "Last pred")
@@ -231,24 +270,16 @@ def main():
         correct_pred = dict()
         for idx, _ in enumerate(last_p_result):
             print("{}: {} == {} ({})".format(idx,
-                                             round(last_p_result[idx], r_decimal),
-                                             round(float(last_p_y[idx][0]), r_decimal),
-                                             abs(round(last_p_result[idx] - float(last_p_y[idx][0]), r_decimal))))
-            for stp in range(alphabet_len):
-                if round(last_p_result[idx] + (stp * alpha_to_num_step), r_decimal) == round(float(last_p_y[idx][0]), r_decimal):
-                    print("(+)stp: ", stp)
-                    if stp in correct_pred:
-                        correct_pred[stp] += 1
-                    else:
-                        correct_pred[stp] = 1
-                    break
-                if round(last_p_result[idx] - (stp * alpha_to_num_step), r_decimal) == round(float(last_p_y[idx][0]), r_decimal):
-                    print("(-)stp: ", stp)
-                    if stp in correct_pred:
-                        correct_pred[stp] += 1
-                    else:
-                        correct_pred[stp] = 1
-                    break
+                                             last_p_result[idx],
+                                             float(last_p_y[idx][0]),
+                                             last_p_result[idx] - float(last_p_y[idx][0])))
+            diff = abs(last_p_result[idx] - float(last_p_y[idx][0]))
+            stp = int(diff / alpha_to_num_step)
+            print("stp: ", stp)
+            if stp in correct_pred:
+                correct_pred[stp] += 1
+            else:
+                correct_pred[stp] = 1
 
         for k, v in correct_pred.items():
             print("Set({}) Delta[{}]: {}/{} = {:.4f}".format(ds,
@@ -256,7 +287,6 @@ def main():
                                                              v,
                                                              len(last_p_y),
                                                              float(v / len(last_p_y))))
-
     for k, v in alpha_to_num.items():
         print(k, v)
 
