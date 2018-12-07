@@ -162,18 +162,16 @@ def main():
     batch_size = int(input("Batch size: "))
     h_dims = word_len
 
-    r_decimal = 2
-
-    alpha_to_num_step = round(float(1 / alphabet_len), r_decimal)
-    alpha_to_num_shift = round(float(alpha_to_num_step / 2), r_decimal)
+    alpha_to_num_step = float(1 / alphabet_len)
+    alpha_to_num_shift = float(alpha_to_num_step / 2)
 
     # Dict = [floor, point, celling]
     alpha_to_num = dict()
     for i in range(alphabet_len):
         step = (alpha_to_num_step * i)
-        alpha_to_num[chr(97 + i)] = [round(step, r_decimal),
-                                     round(step + alpha_to_num_shift, r_decimal),
-                                     round(step + alpha_to_num_step, r_decimal)]
+        alpha_to_num[chr(97 + i)] = [step,
+                                     step + alpha_to_num_shift,
+                                     step + alpha_to_num_step]
 
     model_file = "{}_{}_{}_{}.model".format(window_len, word_len, alphabet_len, epochs)
     if input("Change model name [{}]? ".format(model_file)) == "y":
@@ -255,15 +253,10 @@ def main():
             if (idx + 1) % (word_len - 1) == 0:
                 alpha_list = sorted(alpha_to_num)
                 norm_i = -1
-                for a in alpha_list:
-                    if i < alpha_to_num[a][0]:
+                for a in alpha_list[::-1]:
+                    if i >= alpha_to_num[a][0]:
                         norm_i = alpha_to_num[a][1]
                         break
-                    elif alpha_to_num[a][0] <= i < alpha_to_num[a][2]:
-                        norm_i = alpha_to_num[a][1]
-                        break
-                    else:
-                        norm_i = alpha_to_num[a][1]
                 last_p_result.append(norm_i)
 
         chart.plot(np.array(last_p_result), label=ds + "Last pred")
@@ -274,24 +267,16 @@ def main():
         correct_pred = dict()
         for idx, _ in enumerate(last_p_result):
             print("{}: {} == {} ({})".format(idx,
-                                             round(last_p_result[idx], r_decimal),
-                                             round(float(last_p_y[idx][0]), r_decimal),
-                                             abs(round(last_p_result[idx] - float(last_p_y[idx][0]), r_decimal))))
-            for stp in range(alphabet_len):
-                if round(last_p_result[idx] + (stp * alpha_to_num_step), r_decimal) == round(float(last_p_y[idx][0]), r_decimal):
-                    print("(+)stp: ", stp)
-                    if stp in correct_pred:
-                        correct_pred[stp] += 1
-                    else:
-                        correct_pred[stp] = 1
-                    break
-                if round(last_p_result[idx] - (stp * alpha_to_num_step), r_decimal) == round(float(last_p_y[idx][0]), r_decimal):
-                    print("(-)stp: ", stp)
-                    if stp in correct_pred:
-                        correct_pred[stp] += 1
-                    else:
-                        correct_pred[stp] = 1
-                    break
+                                             last_p_result[idx],
+                                             float(last_p_y[idx][0]),
+                                             last_p_result[idx] - float(last_p_y[idx][0])))
+            diff = abs(last_p_result[idx] - float(last_p_y[idx][0]))
+            stp = int(diff / alpha_to_num_step)
+            print("stp: ", stp)
+            if stp in correct_pred:
+                correct_pred[stp] += 1
+            else:
+                correct_pred[stp] = 1
 
         for k, v in correct_pred.items():
             print("Set({}) Delta[{}]: {}/{} = {:.4f}".format(ds,
