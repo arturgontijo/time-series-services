@@ -100,7 +100,6 @@ def prepare_data(source, window_len, word_len, alphabet_len, alpha_to_num, train
 
 
 def main():
-    model_file = input("Model filename: ")
     source = input("Source: ")
     if source == "":
         source = "weather_JAN.csv"
@@ -120,16 +119,22 @@ def main():
     batch_size = int(input("Batch size: "))
     h_dims = word_len
 
-    alpha_to_num_step = float(1 / alphabet_len)
-    alpha_to_num_shift = float(alpha_to_num_step / 2)
+    r_decimal = 8
+
+    alpha_to_num_step = round(float(1 / alphabet_len), r_decimal)
+    alpha_to_num_shift = round(float(alpha_to_num_step / 2), r_decimal)
 
     # Dict = [floor, point, celling]
     alpha_to_num = dict()
     for i in range(alphabet_len):
         step = (alpha_to_num_step * i)
-        alpha_to_num[chr(97 + i)] = [round(step, 4),
-                                     round(step + alpha_to_num_shift, 4),
-                                     round(step + alpha_to_num_step, 4)]
+        alpha_to_num[chr(97 + i)] = [round(step, r_decimal),
+                                     round(step + alpha_to_num_shift, r_decimal),
+                                     round(step + alpha_to_num_step, r_decimal)]
+
+    model_file = "{}_{}_{}_{}.model".format(window_len, word_len, alphabet_len, epochs)
+    if input("Continue with {}? ") == "n":
+        model_file = input("Model filename: ")
 
     x, y = prepare_data(source, window_len, word_len, alphabet_len, alpha_to_num, train_percent)
 
@@ -226,18 +231,18 @@ def main():
         correct_pred = dict()
         for idx, _ in enumerate(last_p_result):
             print("{}: {} == {} ({})".format(idx,
-                                             round(last_p_result[idx], 4),
-                                             round(float(last_p_y[idx][0]), 4),
-                                             abs(round(last_p_result[idx] - float(last_p_y[idx][0]), 4))))
+                                             round(last_p_result[idx], r_decimal),
+                                             round(float(last_p_y[idx][0]), r_decimal),
+                                             abs(round(last_p_result[idx] - float(last_p_y[idx][0]), r_decimal))))
             for stp in range(alphabet_len):
-                if round(last_p_result[idx] + (stp * alpha_to_num_step), 4) == round(float(last_p_y[idx][0]), 4):
+                if round(last_p_result[idx] + (stp * alpha_to_num_step), r_decimal) == round(float(last_p_y[idx][0]), r_decimal):
                     print("(+)stp: ", stp)
                     if stp in correct_pred:
                         correct_pred[stp] += 1
                     else:
                         correct_pred[stp] = 1
                     break
-                if round(last_p_result[idx] - (stp * alpha_to_num_step), 4) == round(float(last_p_y[idx][0]), 4):
+                if round(last_p_result[idx] - (stp * alpha_to_num_step), r_decimal) == round(float(last_p_y[idx][0]), r_decimal):
                     print("(-)stp: ", stp)
                     if stp in correct_pred:
                         correct_pred[stp] += 1
