@@ -118,8 +118,8 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
                 tmp_d["x"].append(np.array(increment_list))
                 tmp_d["y"].append(np.array([np.float32(alpha_to_num[pred][1])]))
 
-    print(tmp_d["x"][7])
-    print(tmp_d["y"][7])
+    print("tmp_d[x]: ", tmp_d["x"])
+    print("tmp_d[y]: ", tmp_d["y"])
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
