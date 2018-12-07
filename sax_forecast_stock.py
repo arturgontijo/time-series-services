@@ -162,7 +162,7 @@ def main():
     batch_size = int(input("Batch size: "))
     h_dims = word_len
 
-    r_decimal = 8
+    r_decimal = 2
 
     alpha_to_num_step = round(float(1 / alphabet_len), r_decimal)
     alpha_to_num_shift = round(float(alpha_to_num_step / 2), r_decimal)
@@ -176,7 +176,7 @@ def main():
                                      round(step + alpha_to_num_step, r_decimal)]
 
     model_file = "{}_{}_{}_{}.model".format(window_len, word_len, alphabet_len, epochs)
-    if input("Change model name? [{}]? ".format(model_file)) == "y":
+    if input("Change model name [{}]? ".format(model_file)) == "y":
         model_file = input("Model filename: ")
 
     x, y = prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent)
