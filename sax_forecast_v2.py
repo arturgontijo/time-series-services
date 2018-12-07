@@ -111,7 +111,7 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
         word = my_sax[i]
         if i < len(my_sax) - 2:
             pred = my_sax[i + 1][0]
-            num_list = [np.float32(alpha_to_num[char]) for char in word]
+            num_list = [np.float32(alpha_to_num[char][1]) for char in word]
             increment_list = []
             for num in num_list:
                 increment_list.append(num)
