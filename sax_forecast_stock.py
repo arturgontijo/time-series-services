@@ -1,8 +1,10 @@
 import cntk as C
 
 import pandas as pd
+from pandas_datareader import data
 import numpy as np
 import time
+import datetime
 from pandas_datareader import data as pd_data
 
 from saxpy.sax import sax_via_window
@@ -45,16 +47,62 @@ def create_model(x_local, h_dims):
         return m
 
 
-def prepare_data(source, window_len, word_len, alphabet_len, alpha_to_num, train_percent):
+def get_asset_data(source, contract, start_date, end_date):
+    retry_cnt, max_num_retry = 0, 3
+    while retry_cnt < max_num_retry:
+        try:
+            return pd_data.DataReader(contract, source, start_date, end_date)
+        except Exception as e:
+            print(e)
+            retry_cnt += 1
+            time.sleep(np.random.randint(1, 10))
+    print("{} is not reachable".format(source))
+    return []
 
-    ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
-    sax_ret = sax_via_window(ts_data["temp"].values,
-                             window_len,
-                             word_len,
-                             alphabet_size=alphabet_len,
-                             nr_strategy="none",
-                             z_threshold=0.01)
 
+def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent, ts_data=None):
+
+    if not ts_data:
+        source = input("Source: ")
+        if source == "":
+            source = "weather_JAN.csv"
+        ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
+        sax_ret = sax_via_window(ts_data["temp"].values,
+                                 window_len,
+                                 word_len,
+                                 alphabet_size=alphabet_len,
+                                 nr_strategy="none",
+                                 z_threshold=0.01)
+    else:
+        source = input("Remote Source (yahoo): ")
+        if source == "":
+            source = "yahoo"
+
+        contract = input("Contract (SPY): ")
+        if contract == "":
+            contract = "SPY"
+
+        start_date = input("Start Date (2000-01-01): ")
+        if start_date == "":
+            start_date = "2000-01-01"
+
+        end_date = input("End Date (now): ")
+        if end_date == "":
+            end_date = datetime.datetime.now()
+
+        ts_data = get_asset_data(source, contract, start_date, end_date)
+        if "Close" in ts_data:
+            close_tag = "Close"
+        elif "close" in ts_data:
+            close_tag = "close"
+        else:
+            return {"Error": "Couldn't find Close data."}
+        sax_ret = sax_via_window(ts_data[close_tag].values,
+                                 window_len,
+                                 word_len,
+                                 alphabet_size=alphabet_len,
+                                 nr_strategy="none",
+                                 z_threshold=0.01)
     my_sax = dict()
     for k, v in sax_ret.items():
         for i in v:
@@ -100,9 +148,6 @@ def prepare_data(source, window_len, word_len, alphabet_len, alpha_to_num, train
 
 
 def main():
-    source = input("Source: ")
-    if source == "":
-        source = "weather_JAN.csv"
     window_len = int(input("window_len: "))
     word_len = int(input("word_len: "))
     alphabet_len = int(input("alphabet_len: "))
