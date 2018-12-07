@@ -60,12 +60,10 @@ def get_asset_data(source, contract, start_date, end_date):
     return []
 
 
-def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent, ts_data=None):
-
-    if not ts_data:
-        source = input("Source: ")
-        if source == "":
-            source = "weather_JAN.csv"
+def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent):
+    source = input("Source (1=CSV,2=Finance): ")
+    if source == "1":
+        source = "weather_JAN.csv"
         ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
         sax_ret = sax_via_window(ts_data["temp"].values,
                                  window_len,
@@ -181,7 +179,7 @@ def main():
     if input("Change model name? [{}]? ".format(model_file)) == "y":
         model_file = input("Model filename: ")
 
-    x, y = prepare_data(source, window_len, word_len, alphabet_len, alpha_to_num, train_percent)
+    x, y = prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent)
 
     if input("Training? ") == "y":
         input_node = C.sequence.input_variable(1)
