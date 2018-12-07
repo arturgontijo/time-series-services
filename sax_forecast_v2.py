@@ -45,25 +45,8 @@ def create_model(x_local, h_dims):
         return m
 
 
-def main():
-    window_len = int(input("window_len: "))
-    word_len = int(input("word_len: "))
-    alphabet_len = int(input("alphabet_len: "))
+def prepare_data(source, window_len, word_len, alphabet_len, alpha_to_num, train_percent):
 
-    train_percent = float(input("Train %: "))
-
-    alpha_to_num_step = float(1 / alphabet_len)
-    alpha_to_num_shift = float(alpha_to_num_step / 2)
-
-    # Dict = [floor, point, celling]
-    alpha_to_num = dict()
-    for i in range(alphabet_len):
-        step = (alpha_to_num_step * i)
-        alpha_to_num[chr(97+i)] = [round(step, 4),
-                                   round(step + alpha_to_num_shift, 4),
-                                   round(step + alpha_to_num_step, 4)]
-
-    source = "weather_JAN.csv"
     ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
     sax_ret = sax_via_window(ts_data["temp"].values,
                              window_len,
@@ -113,6 +96,20 @@ def main():
     result_y["val"] = np.array(tmp_d["y"][pos_train:pos_val])
     result_y["test"] = np.array(tmp_d["y"][pos_val:])
 
+    return result_x, result_y
+
+
+def main():
+    model_file = input("Model filename: ")
+    source = input("Source: ")
+    if source == "":
+        source = "weather_JAN.csv"
+    window_len = int(input("window_len: "))
+    word_len = int(input("word_len: "))
+    alphabet_len = int(input("alphabet_len: "))
+
+    train_percent = float(input("Train %: "))
+
     epochs = input("Epochs: ")
     if not epochs == "":
         epochs = int(epochs)
@@ -120,16 +117,25 @@ def main():
         epochs = 100
 
     # batch_size = window_len * (word_len - 1)
-    batch_size = int(input("batch_size: "))
+    batch_size = int(input("Batch size: "))
     h_dims = word_len
 
-    start_time = time.time()
+    alpha_to_num_step = float(1 / alphabet_len)
+    alpha_to_num_shift = float(alpha_to_num_step / 2)
 
-    model_file = "{}_epochs.model".format(epochs)
+    # Dict = [floor, point, celling]
+    alpha_to_num = dict()
+    for i in range(alphabet_len):
+        step = (alpha_to_num_step * i)
+        alpha_to_num[chr(97 + i)] = [round(step, 4),
+                                     round(step + alpha_to_num_shift, 4),
+                                     round(step + alpha_to_num_step, 4)]
 
-    if not os.path.exists(model_file):
-        x = C.sequence.input_variable(1)
-        z = create_model(x, h_dims)
+    x, y = prepare_data(source, window_len, word_len, alphabet_len, alpha_to_num, train_percent)
+
+    if input("Training? ") == "y":
+        input_node = C.sequence.input_variable(1)
+        z = create_model(input_node, h_dims)
         var_l = C.input_variable(1, dynamic_axes=z.dynamic_axes, name="y")
         learning_rate = 0.005
         lr_schedule = C.learning_parameter_schedule(learning_rate)
@@ -146,31 +152,29 @@ def main():
 
         start = time.time()
         for epoch in range(0, epochs):
-            for x_batch, l_batch in next_batch(result_x, result_y, "train", batch_size):
-                trainer.train_minibatch({x: x_batch, var_l: l_batch})
+            for x_batch, l_batch in next_batch(x, y, "train", batch_size):
+                trainer.train_minibatch({input_node: x_batch, var_l: l_batch})
 
             if epoch % (epochs / 10) == 0:
                 training_loss = trainer.previous_minibatch_loss_average
                 loss_summary.append(training_loss)
-                print("epoch: {}, loss: {:.4f} [time: {}s]".format(epoch, training_loss, time.time() - start_time))
+                print("epoch: {}, loss: {:.4f} [time: {:.1f}s]".format(epoch, training_loss, time.time() - start))
 
         print("Training took {:.1f} sec".format(time.time() - start))
 
         # Print the train, validation and test errors
         for label_txt in ["train", "val", "test"]:
             print("mse for {}: {:.6f}".format(label_txt, get_mse(trainer,
+                                                                 input_node,
                                                                  x,
-                                                                 result_x,
-                                                                 result_y,
+                                                                 y,
                                                                  batch_size,
                                                                  var_l,
                                                                  label_txt)))
-
         z.save(model_file)
-
     else:
         z = C.load_model(model_file)
-        x = C.logging.find_all_with_name(z, "")[-1]
+        input_node = C.logging.find_all_with_name(z, "")[-1]
 
     # Print out all layers in the model
     print("Loading {} and printing all nodes:".format(model_file))
@@ -184,15 +188,15 @@ def main():
         fig = plt.figure()
         chart = fig.add_subplot(2, 1, 1)
         results = []
-        for x_batch, y_batch in next_batch(result_x, result_y, ds, batch_size):
-            pred = z.eval({x: x_batch})
+        for x_batch, y_batch in next_batch(x, y, ds, batch_size):
+            pred = z.eval({input_node: x_batch})
             results.extend(pred[:, 0])
 
         # chart.plot((result_y[ds]).flatten(), label=ds + " raw")
         # chart.plot(np.array(results), label=ds + " pred")
 
         last_p_y = []
-        for idx, i in enumerate(result_y[ds]):
+        for idx, i in enumerate(y[ds]):
             if (idx + 1) % (word_len - 1) == 0:
                 last_p_y.append(i)
 
@@ -251,9 +255,7 @@ def main():
     for k, v in alpha_to_num.items():
         print(k, v)
 
-    print("Delta: ", time.time() - start_time)
-
-    return result_x, result_y, results
+    return x, y, results
 
 
 if __name__ == '__main__':
