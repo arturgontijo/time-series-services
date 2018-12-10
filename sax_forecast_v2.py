@@ -118,9 +118,6 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
                 tmp_d["x"].append(np.array(increment_list))
                 tmp_d["y"].append(np.array([np.float32(alpha_to_num[pred][1])]))
 
-    print("tmp_d[x]: ", tmp_d["x"])
-    print("tmp_d[y]: ", tmp_d["y"])
-
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
     # result_x[1] = [1,4]       result_y[1] = 3
@@ -265,7 +262,7 @@ def main():
                         break
                 last_p_result.append(norm_i)
 
-        chart.plot(np.array(last_p_result), label=ds + "Last pred")
+        chart.plot(np.array(last_p_result), label=ds + " pred")
         chart.legend()
 
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
