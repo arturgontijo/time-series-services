@@ -112,7 +112,7 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
             close_tag = "close"
         else:
             return {"Error": "Couldn't find Close data."}
-        ts_data["x"].values = ts_data[close_tag].values
+        ts_data["x"] = ts_data[close_tag]
         sax_ret = sax_via_window(ts_data["x"].values,
                                  window_len,
                                  word_len,
