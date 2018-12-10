@@ -253,7 +253,7 @@ def main():
 
         last_p_result = []
         for idx, i in enumerate(results):
-            if (idx + 1) % word_len == 0:
+            if (idx + 1) % (word_len + 1) == 0:
                 alpha_list = sorted(alpha_to_num)
                 a = "a"
                 for a in alpha_list[::-1]:
