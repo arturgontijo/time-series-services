@@ -78,7 +78,9 @@ def get_asset_data(source, contract, start_date, end_date):
 def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent):
     source = input("Source (1=CSV,2=Finance): ")
     if source == "1":
-        source = "weather_JAN.csv"
+        source = input("CSV file (weather_JAN.csv): ")
+        if source == "":
+            source = "weather_JAN.csv"
         ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
         sax_ret = sax_via_window(ts_data["temp"].values,
                                  window_len,
