@@ -273,7 +273,7 @@ def main():
                                              last_p_result[idx],
                                              float(last_p_y[idx][0]),
                                              last_p_result[idx] - float(last_p_y[idx][0])))
-            diff = abs(last_p_result[idx] - float(last_p_y[idx][0]))*100000
+            diff = round(abs(last_p_result[idx] - float(last_p_y[idx][0])), 4)
             stp = int(diff / alpha_to_num_step)
             print("stp: ", stp)
             if stp in correct_pred:
