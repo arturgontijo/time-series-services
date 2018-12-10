@@ -255,12 +255,11 @@ def main():
         for idx, i in enumerate(results):
             if (idx + 1) % word_len == 0:
                 alpha_list = sorted(alpha_to_num)
-                norm_i = -1
+                a = "a"
                 for a in alpha_list[::-1]:
                     if i >= alpha_to_num[a][0]:
-                        norm_i = alpha_to_num[a][1]
                         break
-                last_p_result.append(norm_i)
+                last_p_result.append(alpha_to_num[a][1])
 
         chart.plot(np.array(last_p_result), label=ds + " pred")
         chart.legend()
