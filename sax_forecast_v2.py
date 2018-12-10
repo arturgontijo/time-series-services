@@ -119,10 +119,12 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
                 tmp_d["x"].append(np.array(increment_list))
                 tmp_d["y"].append(np.array([np.float32(alpha_to_num[pred][1])]))
 
-    print("LAST WINDOW ITEMS: ", ts_data[close_tag].values[-window_len:])
-    print("MAX  WINDOW ITEMS: ", max(ts_data[close_tag].values[-window_len:]))
-    print("MIN  WINDOW ITEMS: ", min(ts_data[close_tag].values[-window_len:]))
-    print("      LAST MY_SAX: ", my_sax[len(my_sax) - 1])
+    last_ts = ts_data[close_tag].values[-window_len:]
+    last_sax = my_sax[len(my_sax) - 1]
+    print("LAST WINDOW ITEMS: ", last_ts)
+    print("MAX  WINDOW ITEMS: ", max(last_ts))
+    print("MIN  WINDOW ITEMS: ", min(last_ts))
+    print("      LAST MY_SAX: ", last_sax)
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
@@ -247,8 +249,7 @@ def main():
             pred = z.eval({input_node: x_batch})
             results.extend(pred[:, 0])
 
-        # chart.plot((result_y[ds]).flatten(), label=ds + " raw")
-        # chart.plot(np.array(results), label=ds + " pred")
+        print("LAST_PRED({}): ".format(ds, results[-1]))
 
         last_p_y = []
         for idx, i in enumerate(y[ds]):
@@ -301,8 +302,6 @@ def main():
                                                              float(v / len(last_p_y))))
         print("len(last_p_y): ", len(last_p_y))
         print("len(last_p_result): ", len(last_p_result))
-
-        check_output(x["test"][-window_len:], window_len, word_len, alphabet_len)
 
     for k, v in alpha_to_num.items():
         print(k, v)
