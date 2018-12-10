@@ -75,7 +75,7 @@ def get_asset_data(source, contract, start_date, end_date):
     return []
 
 
-def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent):
+def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
     source = input("Source (1=CSV,2=Finance): ")
     if source == "1":
         source = input("CSV file (weather_JAN.csv): ")
@@ -154,6 +154,7 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
 
     opt_val_test = input("Validate and Test: ")
     if opt_val_test == "y":
+        train_percent = float(input("Train %: "))
         # Separate Dataset into train, val and test
         pos_train = int(len(tmp_d["x"]) * train_percent)
         pos_train = int(pos_train / window_len) * window_len
@@ -162,20 +163,23 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
         pos_val = pos_train + int(pos_val / window_len) * window_len
 
         pos_test = pos_val
+
+        result_x = dict()
+        result_x["train"] = tmp_d["x"][:pos_train]
+        result_x["val"] = tmp_d["x"][pos_train:pos_val]
+        result_x["test"] = tmp_d["x"][pos_test:]
+
+        result_y = dict()
+        result_y["train"] = np.array(tmp_d["y"][:pos_train])
+        result_y["val"] = np.array(tmp_d["y"][pos_train:pos_val])
+        result_y["test"] = np.array(tmp_d["y"][pos_val:])
     else:
         pos_train = len(tmp_d["x"]) - window_len
-        pos_val = len(tmp_d["x"])
-        pos_test = pos_train
 
-    result_x = dict()
-    result_x["train"] = tmp_d["x"][:pos_train]
-    result_x["val"] = tmp_d["x"][pos_train:pos_val]
-    result_x["test"] = tmp_d["x"][pos_test:]
-
-    result_y = dict()
-    result_y["train"] = np.array(tmp_d["y"][:pos_train])
-    result_y["val"] = np.array(tmp_d["y"][pos_train:pos_val])
-    result_y["test"] = np.array(tmp_d["y"][pos_val:])
+        result_x = dict()
+        result_x["train"] = tmp_d["x"][:pos_train]
+        result_y = dict()
+        result_y["train"] = np.array(tmp_d["y"][:pos_train])
 
     return result_x, result_y
 
@@ -184,8 +188,6 @@ def main():
     window_len = int(input("window_len: "))
     word_len = int(input("word_len: "))
     alphabet_len = int(input("alphabet_len: "))
-
-    train_percent = float(input("Train %: "))
 
     epochs = input("Epochs: ")
     if not epochs == "":
@@ -212,7 +214,7 @@ def main():
     if input("Change model name [{}]? ".format(model_file)) == "y":
         model_file = input("Model filename: ")
 
-    x, y = prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent)
+    x, y = prepare_data(window_len, word_len, alphabet_len, alpha_to_num)
 
     if input("Training? ") == "y":
         input_node = C.sequence.input_variable(1)
@@ -245,13 +247,14 @@ def main():
 
         # Print the train, validation and test errors
         for label_txt in ["train", "val", "test"]:
-            print("mse for {}: {:.6f}".format(label_txt, get_mse(trainer,
-                                                                 input_node,
-                                                                 x,
-                                                                 y,
-                                                                 batch_size,
-                                                                 var_l,
-                                                                 label_txt)))
+            if label_txt in x:
+                print("mse for {}: {:.6f}".format(label_txt, get_mse(trainer,
+                                                                     input_node,
+                                                                     x,
+                                                                     y,
+                                                                     batch_size,
+                                                                     var_l,
+                                                                     label_txt)))
         z.save(model_file)
     else:
         z = C.load_model(model_file)
@@ -266,67 +269,68 @@ def main():
     # predict
     results = []
     for j, ds in enumerate(["val", "test"]):
-        fig = plt.figure()
-        chart = fig.add_subplot(2, 1, 1)
-        results = []
-        for x_batch, _ in next_batch(x, y, ds, batch_size):
-            pred = z.eval({input_node: x_batch})
-            results.extend(pred[:, 0])
+        if ds in x:
+            fig = plt.figure()
+            chart = fig.add_subplot(2, 1, 1)
+            results = []
+            for x_batch, _ in next_batch(x, y, ds, batch_size):
+                pred = z.eval({input_node: x_batch})
+                results.extend(pred[:, 0])
 
-        if results:
-            print("LAST_PRED({}): {}".format(ds, results[-1]))
+            if results:
+                print("LAST_PRED({}): {}".format(ds, results[-1]))
 
-        last_p_y = []
-        for idx, i in enumerate(y[ds]):
-            if (idx + 1) % (word_len + 1) == 0:
-                last_p_y.append(i)
+            last_p_y = []
+            for idx, i in enumerate(y[ds]):
+                if (idx + 1) % (word_len + 1) == 0:
+                    last_p_y.append(i)
 
-        chart.plot(np.array(last_p_y).flatten(), label=ds + " raw")
+            chart.plot(np.array(last_p_y).flatten(), label=ds + " raw")
 
-        last_p_result = []
-        for idx, i in enumerate(results):
-            if (idx + 1) % (word_len + 1) == 0:
-                alpha_list = sorted(alpha_to_num)
-                a = "a"
-                for a in alpha_list[::-1]:
-                    if i >= alpha_to_num[a][0]:
-                        break
-                last_p_result.append(alpha_to_num[a][1])
-
-        chart.plot(np.array(last_p_result), label=ds + " pred")
-        chart.legend()
-
-        fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
-
-        correct_pred = dict()
-        for idx, _ in enumerate(last_p_y):
-            print("{}: {} == {} ({})".format(idx,
-                                             last_p_result[idx],
-                                             float(last_p_y[idx][0]),
-                                             last_p_result[idx] - float(last_p_y[idx][0])))
-            alpha_list = sorted(alpha_to_num)
-            for pred_a in alpha_list[::-1]:
-                if last_p_result[idx] >= alpha_to_num[pred_a][0]:
-                    pred_l_num = ord(pred_a)
-                    for y_a in alpha_list[::-1]:
-                        if float(last_p_y[idx][0]) >= alpha_to_num[y_a][0]:
-                            stp = abs(ord(y_a) - pred_l_num)
-                            print("stp: ", stp)
-                            if stp not in correct_pred:
-                                correct_pred[stp] = 1
-                            else:
-                                correct_pred[stp] += 1
+            last_p_result = []
+            for idx, i in enumerate(results):
+                if (idx + 1) % (word_len + 1) == 0:
+                    alpha_list = sorted(alpha_to_num)
+                    a = "a"
+                    for a in alpha_list[::-1]:
+                        if i >= alpha_to_num[a][0]:
                             break
-                    break
+                    last_p_result.append(alpha_to_num[a][1])
 
-        for k, v in correct_pred.items():
-            print("Set({}) Delta[{}]: {}/{} = {:.4f}".format(ds,
-                                                             k,
-                                                             v,
-                                                             len(last_p_y),
-                                                             float(v / len(last_p_y))))
-        print("len(last_p_y): ", len(last_p_y))
-        print("len(last_p_result): ", len(last_p_result))
+            chart.plot(np.array(last_p_result), label=ds + " pred")
+            chart.legend()
+
+            fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
+
+            correct_pred = dict()
+            for idx, _ in enumerate(last_p_y):
+                print("{}: {} == {} ({})".format(idx,
+                                                 last_p_result[idx],
+                                                 float(last_p_y[idx][0]),
+                                                 last_p_result[idx] - float(last_p_y[idx][0])))
+                alpha_list = sorted(alpha_to_num)
+                for pred_a in alpha_list[::-1]:
+                    if last_p_result[idx] >= alpha_to_num[pred_a][0]:
+                        pred_l_num = ord(pred_a)
+                        for y_a in alpha_list[::-1]:
+                            if float(last_p_y[idx][0]) >= alpha_to_num[y_a][0]:
+                                stp = abs(ord(y_a) - pred_l_num)
+                                print("stp: ", stp)
+                                if stp not in correct_pred:
+                                    correct_pred[stp] = 1
+                                else:
+                                    correct_pred[stp] += 1
+                                break
+                        break
+
+            for k, v in correct_pred.items():
+                print("Set({}) Delta[{}]: {}/{} = {:.4f}".format(ds,
+                                                                 k,
+                                                                 v,
+                                                                 len(last_p_y),
+                                                                 float(v / len(last_p_y))))
+            print("len(last_p_y): ", len(last_p_y))
+            print("len(last_p_result): ", len(last_p_result))
 
     word_pred = input("Word to get pred (cedcaadc): ")
     if word_pred == "":
