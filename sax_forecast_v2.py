@@ -246,7 +246,7 @@ def main():
 
         last_p_y = []
         for idx, i in enumerate(y[ds]):
-            if (idx + 1) % word_len == 0:
+            if (idx + 1) % (word_len + 1) == 0:
                 last_p_y.append(i)
 
         chart.plot(np.array(last_p_y).flatten(), label=ds + " raw")
