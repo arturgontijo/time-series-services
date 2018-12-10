@@ -60,6 +60,23 @@ def get_asset_data(source, contract, start_date, end_date):
     return []
 
 
+def check_output(last_sax, window_len, word_len, alphabet_len):
+    sax_ret = sax_via_window(last_sax,
+                             window_len,
+                             word_len,
+                             alphabet_size=alphabet_len,
+                             nr_strategy="none",
+                             z_threshold=0.01)
+    my_sax = dict()
+    for k, v in sax_ret.items():
+        for i in v:
+            my_sax[i] = k
+    for k, v in my_sax.items():
+        print(k, v)
+    print("max: ", max(last_sax))
+    print("min: ", min(last_sax))
+
+
 def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent):
     source = input("Source (1=CSV,2=Finance): ")
     if source == "1":
@@ -295,6 +312,8 @@ def main():
                                                              float(v / len(last_p_y))))
         print("len(last_p_y): ", len(last_p_y))
         print("len(last_p_result): ", len(last_p_result))
+
+        check_output(x["test"][-window_len:], window_len, word_len, alphabet_len)
 
     for k, v in alpha_to_num.items():
         print(k, v)
