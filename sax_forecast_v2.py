@@ -281,7 +281,10 @@ def main():
                         if float(last_p_y[idx][0]) >= alpha_to_num[y_a][0]:
                             stp = abs(ord(y_a) - pred_l_num)
                             print("stp: ", stp)
-                            correct_pred[stp] += 1
+                            if stp not in correct_pred:
+                                correct_pred[stp] = 1
+                            else:
+                                correct_pred[stp] += 1
                             break
                     break
 
