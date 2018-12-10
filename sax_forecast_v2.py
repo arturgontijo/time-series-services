@@ -174,12 +174,8 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
         result_y["val"] = np.array(tmp_d["y"][pos_train:pos_val])
         result_y["test"] = np.array(tmp_d["y"][pos_val:])
     else:
-        pos_train = len(tmp_d["x"]) - window_len
-
-        result_x = dict()
-        result_x["train"] = tmp_d["x"][:pos_train]
-        result_y = dict()
-        result_y["train"] = np.array(tmp_d["y"][:pos_train])
+        result_x = {"train": tmp_d["x"]}
+        result_y = {"train": np.array(tmp_d["y"])}
 
     return result_x, result_y
 
