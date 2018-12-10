@@ -61,6 +61,7 @@ def get_asset_data(source, contract, start_date, end_date):
 
 
 def check_output(last_sax, window_len, word_len, alphabet_len):
+    print("============================CHECK_OUTPUT============================")
     sax_ret = sax_via_window(last_sax,
                              window_len,
                              word_len,
@@ -118,6 +119,9 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
                                  alphabet_size=alphabet_len,
                                  nr_strategy="none",
                                  z_threshold=0.01)
+
+    print("LAST WINDOW ITEMS: ", ts_data[close_tag].values[-window_len:])
+
     my_sax = dict()
     for k, v in sax_ret.items():
         for i in v:
@@ -134,6 +138,8 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
                 increment_list.append(num)
                 tmp_d["x"].append(np.array(increment_list))
                 tmp_d["y"].append(np.array([np.float32(alpha_to_num[pred][1])]))
+
+    print("LAST MY_SAX: ", my_sax[len(my_sax) - 1])
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
