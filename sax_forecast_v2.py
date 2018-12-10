@@ -246,14 +246,14 @@ def main():
 
         last_p_y = []
         for idx, i in enumerate(y[ds]):
-            if (idx + 1) % (word_len - 1) == 0:
+            if (idx + 1) % word_len == 0:
                 last_p_y.append(i)
 
         chart.plot(np.array(last_p_y).flatten(), label=ds + " raw")
 
         last_p_result = []
         for idx, i in enumerate(results):
-            if (idx + 1) % (word_len - 1) == 0:
+            if (idx + 1) % word_len == 0:
                 alpha_list = sorted(alpha_to_num)
                 norm_i = -1
                 for a in alpha_list[::-1]:
@@ -273,7 +273,7 @@ def main():
                                              last_p_result[idx],
                                              float(last_p_y[idx][0]),
                                              last_p_result[idx] - float(last_p_y[idx][0])))
-            diff = abs(last_p_result[idx] - float(last_p_y[idx][0]))
+            diff = abs(last_p_result[idx] - float(last_p_y[idx][0]))*100000
             stp = int(diff / alpha_to_num_step)
             print("stp: ", stp)
             if stp in correct_pred:
