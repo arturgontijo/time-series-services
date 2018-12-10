@@ -163,7 +163,7 @@ def main():
 
     # batch_size = window_len * (word_len - 1)
     batch_size = int(input("Batch size: "))
-    h_dims = word_len
+    h_dims = word_len + 1
 
     alpha_to_num_step = float(1 / alphabet_len)
     alpha_to_num_shift = float(alpha_to_num_step / 2)
