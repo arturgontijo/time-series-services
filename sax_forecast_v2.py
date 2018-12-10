@@ -264,7 +264,8 @@ def main():
             pred = z.eval({input_node: x_batch})
             results.extend(pred[:, 0])
 
-        print("LAST_PRED({}): ".format(ds, results[-1]))
+        if results:
+            print("LAST_PRED({}): {}".format(ds, results[-1]))
 
         last_p_y = []
         for idx, i in enumerate(y[ds]):
@@ -318,7 +319,10 @@ def main():
         print("len(last_p_y): ", len(last_p_y))
         print("len(last_p_result): ", len(last_p_result))
 
-    r = get_pred(z, input_node, "cedcaadc", window_len, alpha_to_num)
+    word_pred = input("Word to get pred (cedcaadc): ")
+    if word_pred == "":
+        word_pred = "cedcaadc"
+    r = get_pred(z, input_node, word_pred, window_len, alpha_to_num)
     print("================= PRED =====================")
     print("r = ", r)
     print("============================================")
