@@ -267,7 +267,7 @@ def main():
         fig.savefig("{}_chart_{}_epochs.jpg".format(ds, epochs))
 
         correct_pred = dict()
-        for idx, _ in enumerate(last_p_result):
+        for idx, _ in enumerate(last_p_y):
             print("{}: {} == {} ({})".format(idx,
                                              last_p_result[idx],
                                              float(last_p_y[idx][0]),
@@ -293,6 +293,9 @@ def main():
                                                              v,
                                                              len(last_p_y),
                                                              float(v / len(last_p_y))))
+        print("len(last_p_y): ", len(last_p_y))
+        print("len(last_p_result): ", len(last_p_result))
+
     for k, v in alpha_to_num.items():
         print(k, v)
 
