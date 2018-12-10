@@ -60,24 +60,6 @@ def get_asset_data(source, contract, start_date, end_date):
     return []
 
 
-def check_output(last_sax, window_len, word_len, alphabet_len):
-    print("============================CHECK_OUTPUT============================")
-    sax_ret = sax_via_window(last_sax,
-                             window_len,
-                             word_len,
-                             alphabet_size=alphabet_len,
-                             nr_strategy="none",
-                             z_threshold=0.01)
-    my_sax = dict()
-    for k, v in sax_ret.items():
-        for i in v:
-            my_sax[i] = k
-    for k, v in my_sax.items():
-        print(k, v)
-    print("max: ", max(last_sax))
-    print("min: ", min(last_sax))
-
-
 def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent):
     source = input("Source (1=CSV,2=Finance): ")
     if source == "1":
@@ -120,8 +102,6 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
                                  nr_strategy="none",
                                  z_threshold=0.01)
 
-    print("LAST WINDOW ITEMS: ", ts_data[close_tag].values[-window_len:])
-
     my_sax = dict()
     for k, v in sax_ret.items():
         for i in v:
@@ -139,7 +119,10 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
                 tmp_d["x"].append(np.array(increment_list))
                 tmp_d["y"].append(np.array([np.float32(alpha_to_num[pred][1])]))
 
-    print("LAST MY_SAX: ", my_sax[len(my_sax) - 1])
+    print("LAST WINDOW ITEMS: ", ts_data[close_tag].values[-window_len:])
+    print("MAX  WINDOW ITEMS: ", max(ts_data[close_tag].values[-window_len:]))
+    print("MIN  WINDOW ITEMS: ", min(ts_data[close_tag].values[-window_len:]))
+    print("      LAST MY_SAX: ", my_sax[len(my_sax) - 1])
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
@@ -319,7 +302,7 @@ def main():
         print("len(last_p_y): ", len(last_p_y))
         print("len(last_p_result): ", len(last_p_result))
 
-        check_output(x["test"].values[-window_len:], window_len, word_len, alphabet_len)
+        check_output(x["test"][-window_len:], window_len, word_len, alphabet_len)
 
     for k, v in alpha_to_num.items():
         print(k, v)
