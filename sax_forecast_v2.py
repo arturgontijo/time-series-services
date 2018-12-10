@@ -22,8 +22,8 @@ import matplotlib.pyplot as plt
 
 def next_batch(x, y, ds, batch_size):
     """get the next batch for training"""
-    def as_batch(data, start, count):
-        return data[start:start + count]
+    def as_batch(p_data, start, count):
+        return p_data[start:start + count]
     for i in range(0, len(x[ds]), batch_size):
         yield as_batch(x[ds], i, batch_size), as_batch(y[ds], i, batch_size)
 
@@ -45,6 +45,21 @@ def create_model(x_local, h_dims):
         m = C.layers.Dropout(0.2)(m)
         m = C.layers.Dense(1)(m)
         return m
+
+
+def get_pred(model, input_node, word, window_len, alpha_to_num):
+    x = {"pred": []}
+    y = {"pred": []}
+    num_list = [np.float32(alpha_to_num[char][1]) for char in word]
+    increment_list = []
+    for num in num_list:
+        increment_list.append(num)
+        x["pred"].append(np.array(increment_list))
+    results = []
+    for x_batch, _ in next_batch(x, y, "pred", window_len):
+        pred = model.eval({input_node: x_batch})
+        results.extend(pred[:, 0])
+    return results
 
 
 def get_asset_data(source, contract, start_date, end_date):
@@ -245,7 +260,7 @@ def main():
         fig = plt.figure()
         chart = fig.add_subplot(2, 1, 1)
         results = []
-        for x_batch, y_batch in next_batch(x, y, ds, batch_size):
+        for x_batch, _ in next_batch(x, y, ds, batch_size):
             pred = z.eval({input_node: x_batch})
             results.extend(pred[:, 0])
 
@@ -302,6 +317,11 @@ def main():
                                                              float(v / len(last_p_y))))
         print("len(last_p_y): ", len(last_p_y))
         print("len(last_p_result): ", len(last_p_result))
+
+    r = get_pred(z, input_node, "cedcaadc", window_len, alpha_to_num)
+    print("================= PRED =====================")
+    print("r = ", r)
+    print("============================================")
 
     for k, v in alpha_to_num.items():
         print(k, v)
