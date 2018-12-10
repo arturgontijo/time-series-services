@@ -125,8 +125,8 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
     tmp_d = {"x": [], "y": []}
     for i in range(len(my_sax)):
         word = my_sax[i]
-        if i < len(my_sax) - 2:
-            pred = my_sax[i + 1][0]
+        if i < len(my_sax) - 1:
+            pred = my_sax[i + 1][-1]
             num_list = [np.float32(alpha_to_num[char][1]) for char in word]
             increment_list = []
             for num in num_list:
