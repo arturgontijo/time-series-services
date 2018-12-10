@@ -82,7 +82,7 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
         if source == "":
             source = "weather_JAN.csv"
         ts_data = pd.read_csv(source, index_col="date", parse_dates=["date"], dtype=np.float32)
-        sax_ret = sax_via_window(ts_data["temp"].values,
+        sax_ret = sax_via_window(ts_data["x"].values,
                                  window_len,
                                  word_len,
                                  alphabet_size=alphabet_len,
