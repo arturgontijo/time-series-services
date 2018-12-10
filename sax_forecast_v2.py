@@ -273,13 +273,17 @@ def main():
                                              last_p_result[idx],
                                              float(last_p_y[idx][0]),
                                              last_p_result[idx] - float(last_p_y[idx][0])))
-            diff = round(abs(last_p_result[idx] - float(last_p_y[idx][0])), 4)
-            stp = int(diff / alpha_to_num_step)
-            print("stp: ", stp)
-            if stp in correct_pred:
-                correct_pred[stp] += 1
-            else:
-                correct_pred[stp] = 1
+            alpha_list = sorted(alpha_to_num)
+            for pred_a in alpha_list[::-1]:
+                if last_p_result[idx] >= alpha_to_num[pred_a][0]:
+                    pred_l_num = ord(pred_a)
+                    for y_a in alpha_list[::-1]:
+                        if float(last_p_y[idx][0]) >= alpha_to_num[y_a][0]:
+                            stp = abs(ord(y_a) - pred_l_num)
+                            print("stp: ", stp)
+                            correct_pred[stp] += 1
+                            break
+                    break
 
         for k, v in correct_pred.items():
             print("Set({}) Delta[{}]: {}/{} = {:.4f}".format(ds,
