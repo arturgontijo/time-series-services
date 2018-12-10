@@ -152,14 +152,20 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
     # result_x[4] = [1,4,2,2,4] result_y[4] = 3
     #####
 
-    # Separate Dataset into train (80%), val (10%) and test (10%)
-    pos_train = int(len(tmp_d["x"]) * train_percent)
-    pos_train = int(pos_train / window_len) * window_len
+    opt_val_test = input("Validate and Test: ")
+    if opt_val_test == "y":
+        # Separate Dataset into train, val and test
+        pos_train = int(len(tmp_d["x"]) * train_percent)
+        pos_train = int(pos_train / window_len) * window_len
 
-    pos_val = len(tmp_d["x"][pos_train:]) / 2
-    pos_val = pos_train + int(pos_val / window_len) * window_len
+        pos_val = len(tmp_d["x"][pos_train:]) / 2
+        pos_val = pos_train + int(pos_val / window_len) * window_len
 
-    pos_test = pos_val
+        pos_test = pos_val
+    else:
+        pos_train = len(tmp_d["x"]) - window_len
+        pos_val = len(tmp_d["x"])
+        pos_test = pos_train
 
     result_x = dict()
     result_x["train"] = tmp_d["x"][:pos_train]
