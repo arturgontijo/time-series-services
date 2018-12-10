@@ -112,7 +112,8 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
             close_tag = "close"
         else:
             return {"Error": "Couldn't find Close data."}
-        sax_ret = sax_via_window(ts_data[close_tag].values,
+        ts_data["x"].values = ts_data[close_tag].values
+        sax_ret = sax_via_window(ts_data["x"].values,
                                  window_len,
                                  word_len,
                                  alphabet_size=alphabet_len,
@@ -136,7 +137,7 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num, train_percent
                 tmp_d["x"].append(np.array(increment_list))
                 tmp_d["y"].append(np.array([np.float32(alpha_to_num[pred][1])]))
 
-    last_ts = ts_data[close_tag].values[-window_len:]
+    last_ts = ts_data["x"].values[-window_len:]
     last_sax = my_sax[len(my_sax) - 1]
     print("LAST WINDOW ITEMS: ", last_ts)
     print("MAX  WINDOW ITEMS: ", max(last_ts))
