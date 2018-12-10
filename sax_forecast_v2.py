@@ -211,8 +211,9 @@ def main():
                                      step + alpha_to_num_step]
 
     model_file = "{}_{}_{}_{}.model".format(window_len, word_len, alphabet_len, epochs)
-    if input("Change model name [{}]? ".format(model_file)) == "y":
-        model_file = input("Model filename: ")
+    opt_model_file = input("Change model name [{}]? ".format(model_file))
+    if opt_model_file != "" and opt_model_file != "n":
+        model_file = opt_model_file
 
     x, y = prepare_data(window_len, word_len, alphabet_len, alpha_to_num)
 
