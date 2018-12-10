@@ -264,7 +264,8 @@ def main():
         print("  {}".format(n))
 
     # predict
-    results = []
+    last_p_result = []
+    last_p_y = []
     for j, ds in enumerate(["val", "test"]):
         if ds in x:
             fig = plt.figure()
@@ -340,8 +341,8 @@ def main():
     for k, v in alpha_to_num.items():
         print(k, v)
 
-    return x, y, results
+    return x, y, last_p_result, last_p_y
 
 
 if __name__ == '__main__':
-    r_x, r_y, r_test_pred = main()
+    r_x, r_y, pred_x, pred_y = main()
