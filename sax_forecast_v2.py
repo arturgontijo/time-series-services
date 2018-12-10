@@ -319,7 +319,7 @@ def main():
         print("len(last_p_y): ", len(last_p_y))
         print("len(last_p_result): ", len(last_p_result))
 
-        check_output(x["test"][-window_len:], window_len, word_len, alphabet_len)
+        check_output(x["test"].values[-window_len:], window_len, word_len, alphabet_len)
 
     for k, v in alpha_to_num.items():
         print(k, v)
