@@ -119,69 +119,71 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
                                  alphabet_size=alphabet_len,
                                  nr_strategy="none",
                                  z_threshold=0.01)
+    if sax_ret:
+        my_sax = dict()
+        for k, v in sax_ret.items():
+            for i in v:
+                my_sax[i] = k
+                print("my_sax[{}]: {}".format(i, my_sax[0]))
 
-    my_sax = dict()
-    for k, v in sax_ret.items():
-        for i in v:
-            my_sax[i] = k
-            print("my_sax[{}]: {}".format(i, my_sax[0]))
+        tmp_d = {"x": [], "y": []}
+        for i in range(len(my_sax)):
+            word = my_sax[i]
+            if i < len(my_sax) - 1:
+                pred = my_sax[i + 1][-1]
+                num_list = [np.float32(alpha_to_num[char][1]) for char in word]
+                increment_list = []
+                for num in num_list:
+                    increment_list.append(num)
+                    tmp_d["x"].append(np.array(increment_list))
+                    tmp_d["y"].append(np.array([np.float32(alpha_to_num[pred][1])]))
 
-    tmp_d = {"x": [], "y": []}
-    for i in range(len(my_sax)):
-        word = my_sax[i]
-        if i < len(my_sax) - 1:
-            pred = my_sax[i + 1][-1]
-            num_list = [np.float32(alpha_to_num[char][1]) for char in word]
-            increment_list = []
-            for num in num_list:
-                increment_list.append(num)
-                tmp_d["x"].append(np.array(increment_list))
-                tmp_d["y"].append(np.array([np.float32(alpha_to_num[pred][1])]))
+        last_ts = ts_data["x"].values[-window_len:]
+        last_sax = my_sax[len(my_sax) - 1]
+        print("LAST WINDOW ITEMS: ", last_ts)
+        print("MAX  WINDOW ITEM : ", max(last_ts))
+        print("MIN  WINDOW ITEM : ", min(last_ts))
+        print("       LAST SAX  : ", last_sax)
 
-    last_ts = ts_data["x"].values[-window_len:]
-    last_sax = my_sax[len(my_sax) - 1]
-    print("LAST WINDOW ITEMS: ", last_ts)
-    print("MAX  WINDOW ITEM : ", max(last_ts))
-    print("MIN  WINDOW ITEM : ", min(last_ts))
-    print("       LAST SAX  : ", last_sax)
+        # FORMAT:
+        # result_x[0] = [1]         result_y[0] = 3
+        # result_x[1] = [1,4]       result_y[1] = 3
+        # result_x[2] = [1,4,2]     result_y[2] = 3
+        # result_x[3] = [1,4,2,2]   result_y[3] = 3
+        # result_x[4] = [1,4,2,2,4] result_y[4] = 3
+        #####
 
-    # FORMAT:
-    # result_x[0] = [1]         result_y[0] = 3
-    # result_x[1] = [1,4]       result_y[1] = 3
-    # result_x[2] = [1,4,2]     result_y[2] = 3
-    # result_x[3] = [1,4,2,2]   result_y[3] = 3
-    # result_x[4] = [1,4,2,2,4] result_y[4] = 3
-    #####
+        opt_val_test = input("Validate and Test: ")
+        if opt_val_test == "y":
+            train_percent = float(input("Train %: "))
+            # Separate Dataset into train, val and test
+            pos_train = int(len(tmp_d["x"]) * train_percent)
+            pos_train = int(pos_train / window_len) * window_len
 
-    opt_val_test = input("Validate and Test: ")
-    if opt_val_test == "y":
-        train_percent = float(input("Train %: "))
-        # Separate Dataset into train, val and test
-        pos_train = int(len(tmp_d["x"]) * train_percent)
-        pos_train = int(pos_train / window_len) * window_len
+            pos_val = len(tmp_d["x"][pos_train:]) / 2
+            pos_val = pos_train + int(pos_val / window_len) * window_len
 
-        pos_val = len(tmp_d["x"][pos_train:]) / 2
-        pos_val = pos_train + int(pos_val / window_len) * window_len
+            pos_test = pos_val
 
-        pos_test = pos_val
+            result_x = dict()
+            result_x["train"] = tmp_d["x"][:pos_train]
+            result_x["val"] = tmp_d["x"][pos_train:pos_val]
+            result_x["test"] = tmp_d["x"][pos_test:]
 
-        result_x = dict()
-        result_x["train"] = tmp_d["x"][:pos_train]
-        result_x["val"] = tmp_d["x"][pos_train:pos_val]
-        result_x["test"] = tmp_d["x"][pos_test:]
+            result_y = dict()
+            result_y["train"] = np.array(tmp_d["y"][:pos_train])
+            result_y["val"] = np.array(tmp_d["y"][pos_train:pos_val])
+            result_y["test"] = np.array(tmp_d["y"][pos_val:])
+        else:
+            result_x = {"train": tmp_d["x"]}
+            result_y = {"train": np.array(tmp_d["y"])}
 
-        result_y = dict()
-        result_y["train"] = np.array(tmp_d["y"][:pos_train])
-        result_y["val"] = np.array(tmp_d["y"][pos_train:pos_val])
-        result_y["test"] = np.array(tmp_d["y"][pos_val:])
+        print("result_x[train][window-1]: ", result_x["train"][window_len - 1])
+        print("result_y[train][window-1]: ", result_y["train"][window_len - 1])
+
+        return result_x,
     else:
-        result_x = {"train": tmp_d["x"]}
-        result_y = {"train": np.array(tmp_d["y"])}
-
-    print("result_x[train][window-1]: ", result_x["train"][window_len - 1])
-    print("result_y[train][window-1]: ", result_y["train"][window_len - 1])
-
-    return result_x, result_y
+        print("No data!")
 
 
 def main():
