@@ -181,12 +181,12 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
             result_x = {"train": tmp_d["x"]}
             result_y = {"train": np.array(tmp_d["y"])}
 
-        print("result_x[train][{}]: ".format(result_x["train"][word_len - 1], word_len - 1))
-        print("result_y[train][{}]: ".format(result_y["train"][word_len - 1], word_len - 1))
-        print("result_x[train][{}]: ".format(result_x["train"][2*word_len - 1], 2*word_len - 1))
-        print("result_y[train][{}]: ".format(result_y["train"][2*word_len - 1], 2*word_len - 1))
-        print("result_x[train][{}]: ".format(result_x["train"][3*word_len - 1], 3*word_len - 1))
-        print("result_y[train][{}]: ".format(result_y["train"][3*word_len - 1], 3*word_len - 1))
+        print("result_x[train][{}]: {}".format(word_len - 1, result_x["train"][word_len - 1]))
+        print("result_y[train][{}]: {}".format(word_len - 1, result_y["train"][word_len - 1]))
+        print("result_x[train][{}]: {}".format(2*word_len - 1, result_x["train"][2*word_len - 1]))
+        print("result_y[train][{}]: {}".format(2*word_len - 1, result_y["train"][2*word_len - 1]))
+        print("result_x[train][{}]: {}".format(3*word_len - 1, result_x["train"][3*word_len - 1]))
+        print("result_y[train][{}]: {}".format(3*word_len - 1, result_y["train"][3*word_len - 1]))
     else:
         print("No data!")
 
