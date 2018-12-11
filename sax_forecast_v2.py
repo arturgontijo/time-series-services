@@ -187,6 +187,8 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
         print("result_y[train][{}]: {}".format(2*word_len - 1, result_y["train"][2*word_len - 1]))
         print("result_x[train][{}]: {}".format(3*word_len - 1, result_x["train"][3*word_len - 1]))
         print("result_y[train][{}]: {}".format(3*word_len - 1, result_y["train"][3*word_len - 1]))
+        print("result_x[train][{}]: {}".format(4 * word_len - 1, result_x["train"][4 * word_len - 1]))
+        print("result_y[train][{}]: {}".format(4 * word_len - 1, result_y["train"][4 * word_len - 1]))
     else:
         print("No data!")
 
