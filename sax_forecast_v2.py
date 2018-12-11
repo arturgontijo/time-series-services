@@ -124,9 +124,7 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
     for k, v in sax_ret.items():
         for i in v:
             my_sax[i] = k
-
-    print("my_sax[0]: ", my_sax[0])
-    print("my_sax[1]: ", my_sax[1])
+            print("my_sax[{}]: {}".format(i, my_sax[0]))
 
     tmp_d = {"x": [], "y": []}
     for i in range(len(my_sax)):
