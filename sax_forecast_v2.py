@@ -125,6 +125,9 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
         for i in v:
             my_sax[i] = k
 
+    print("my_sax[0]: ", my_sax[0])
+    print("my_sax[1]: ", my_sax[1])
+
     tmp_d = {"x": [], "y": []}
     for i in range(len(my_sax)):
         word = my_sax[i]
@@ -140,9 +143,9 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
     last_ts = ts_data["x"].values[-window_len:]
     last_sax = my_sax[len(my_sax) - 1]
     print("LAST WINDOW ITEMS: ", last_ts)
-    print("MAX  WINDOW ITEMS: ", max(last_ts))
-    print("MIN  WINDOW ITEMS: ", min(last_ts))
-    print("      LAST MY_SAX: ", last_sax)
+    print("MAX  WINDOW ITEM : ", max(last_ts))
+    print("MIN  WINDOW ITEM : ", min(last_ts))
+    print("       LAST SAX  : ", last_sax)
 
     # FORMAT:
     # result_x[0] = [1]         result_y[0] = 3
@@ -176,6 +179,9 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
     else:
         result_x = {"train": tmp_d["x"]}
         result_y = {"train": np.array(tmp_d["y"])}
+
+    print("result_x[window-1]: ", result_x[window_len - 1])
+    print("result_y[window-1]: ", result_y[window_len - 1])
 
     return result_x, result_y
 
