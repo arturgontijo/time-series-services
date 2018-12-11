@@ -59,7 +59,19 @@ def get_pred(model, input_node, word, window_len, alpha_to_num):
     for x_batch, _ in next_batch(x, y, "pred", window_len):
         pred = model.eval({input_node: x_batch})
         results.extend(pred[:, 0])
-    return results
+
+    perc_pred = -1
+    if results:
+        pred = results[-1]
+        alpha_list = sorted(alpha_to_num)
+        for a in alpha_list[::-1]:
+            if pred >= alpha_to_num[a][0]:
+                step = alpha_to_num[a][2] - alpha_to_num[a][0]
+                pred_delta = pred - alpha_to_num[a][0]
+                perc_pred = float(pred_delta / step)
+                break
+        return results[-1], perc_pred
+    return [], perc_pred
 
 
 def get_asset_data(source, contract, start_date, end_date):
@@ -180,17 +192,8 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
         else:
             result_x = {"train": tmp_d["x"]}
             result_y = {"train": np.array(tmp_d["y"])}
-
-        print("result_x[train][{}]: {}".format(word_len - 1, result_x["train"][word_len - 1]))
-        print("result_y[train][{}]: {}".format(word_len - 1, result_y["train"][word_len - 1]))
-        print("result_x[train][{}]: {}".format(2*word_len - 1, result_x["train"][2*word_len - 1]))
-        print("result_y[train][{}]: {}".format(2*word_len - 1, result_y["train"][2*word_len - 1]))
-        print("result_x[train][{}]: {}".format(3*word_len - 1, result_x["train"][3*word_len - 1]))
-        print("result_y[train][{}]: {}".format(3*word_len - 1, result_y["train"][3*word_len - 1]))
-        print("result_x[train][{}]: {}".format(4 * word_len - 1, result_x["train"][4 * word_len - 1]))
-        print("result_y[train][{}]: {}".format(4 * word_len - 1, result_y["train"][4 * word_len - 1]))
     else:
-        print("No data!")
+        print("Not enough data!")
 
     return result_x, result_y
 
@@ -348,9 +351,10 @@ def main():
     word_pred = input("Word to get pred (cedcaadc): ")
     if word_pred == "":
         word_pred = "cedcaadc"
-    r = get_pred(z, input_node, word_pred, window_len, alpha_to_num)
+    r, perc = get_pred(z, input_node, word_pred, window_len, alpha_to_num)
     print("================= PRED =====================")
     print("r = ", r)
+    print("perc = ", perc)
     print("============================================")
 
     for k, v in alpha_to_num.items():
