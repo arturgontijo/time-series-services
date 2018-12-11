@@ -119,6 +119,7 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
                                  alphabet_size=alphabet_len,
                                  nr_strategy="none",
                                  z_threshold=0.01)
+    result_x = result_y = []
     if sax_ret:
         my_sax = dict()
         for k, v in sax_ret.items():
@@ -182,10 +183,10 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
 
         print("result_x[train][window-1]: ", result_x["train"][window_len - 1])
         print("result_y[train][window-1]: ", result_y["train"][window_len - 1])
-
-        return result_x,
     else:
         print("No data!")
+
+    return result_x, result_y
 
 
 def main():
