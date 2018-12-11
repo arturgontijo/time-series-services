@@ -180,8 +180,8 @@ def prepare_data(window_len, word_len, alphabet_len, alpha_to_num):
         result_x = {"train": tmp_d["x"]}
         result_y = {"train": np.array(tmp_d["y"])}
 
-    print("result_x[window-1]: ", result_x[window_len - 1])
-    print("result_y[window-1]: ", result_y[window_len - 1])
+    print("result_x[test][window-1]: ", result_x["test"][window_len - 1])
+    print("result_y[test][window-1]: ", result_y["test"][window_len - 1])
 
     return result_x, result_y
 
