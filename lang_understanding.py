@@ -35,13 +35,6 @@ def create_reader(in_path, vocab_size, num_intents, num_labels, is_training):
      )), randomize=is_training, max_sweeps = C.io.INFINITELY_REPEAT if is_training else 1)
 
 
-def create_criterion_function(model):
-    labels = C.placeholder(name='labels')
-    ce   = C.cross_entropy_with_softmax(model, labels)
-    errs = C.classification_error      (model, labels)
-    return C.combine ([ce, errs]) # (features, labels) -> (loss, metric)
-
-
 def create_criterion_function_preferred(model, labels):
     ce   = C.cross_entropy_with_softmax(model, labels)
     errs = C.classification_error      (model, labels)
@@ -182,24 +175,25 @@ def main():
     emb_dim    = 150
     hidden_dim = 300
 
-    # Create the containers for input feature (x) and the label (y)
-    x = C.sequence.input_variable(vocab_size)
-    y = C.sequence.input_variable(num_labels)
+    model_file = input("Model file name: ")
+    if not os.path.exists(model_file):
+        # Create the containers for input feature (x) and the label (y)
+        x_input = C.sequence.input_variable(vocab_size)
+        y_input = C.sequence.input_variable(num_labels)
 
-    z = create_model(emb_dim, hidden_dim, num_labels)
+        z = create_model(emb_dim, hidden_dim, num_labels)
 
-    criterion = create_criterion_function(z)
-    criterion.replace_placeholders({criterion.placeholders[0]: C.sequence.input_variable(num_labels)})
+        # peek
+        reader = create_reader(data['train']['file'], vocab_size, num_intents, num_labels, is_training=True)
+        train(x_input, y_input, reader, z)
 
-    # peek
-    reader = create_reader(data['train']['file'], vocab_size, num_intents, num_labels, is_training=True)
-    reader.streams.keys()
+        reader = create_reader(data['test']['file'], vocab_size, num_intents, num_labels, is_training=False)
+        evaluate(x_input, y_input, reader, z)
 
-    z = create_model(emb_dim, hidden_dim, num_labels)
-    train(x, y, reader, z)
-
-    reader = create_reader(data['test']['file'], vocab_size, num_intents, num_labels, is_training=False)
-    evaluate(x, y, reader, z)
+        z.save(model_file)
+    else:
+        z = C.load_model(model_file)
+        x_input = C.logging.find_all_with_name(z, "")[-1]
 
     # load dictionaries
     query_wl = [line.rstrip('\n') for line in open(data['query']['file'])]
@@ -216,11 +210,11 @@ def main():
         onehot[t, w[t]] = 1
 
     # x = C.sequence.input_variable(vocab_size)
-    pred = z(x).eval({x: [onehot]})[0]
+    pred = z(x_input).eval({x_input: [onehot]})[0]
     print(pred.shape)
     best = np.argmax(pred, axis=1)
     print(best)
-    list(zip(seq.split(), [slots_wl[s] for s in best]))
+    print(list(zip(seq.split(), [slots_wl[s] for s in best])))
 
 
 if __name__ == '__main__':
