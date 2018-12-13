@@ -49,6 +49,7 @@ def create_criterion_function_preferred(model, labels):
 
 
 def train(x, y, reader, model_func, max_epochs=10, task='slot_tagging'):
+    print("Training...")
 
     # Instantiate the model function; x is the input (feature) variable
     model = model_func(x)
@@ -106,8 +107,12 @@ def train(x, y, reader, model_func, max_epochs=10, task='slot_tagging'):
             t += data[y].num_samples                    # samples so far
         trainer.summarize_training_progress()
 
+    return
+
 
 def evaluate(x, y, reader, model_func, task='slot_tagging'):
+
+    print("Evaluating...")
 
     # Instantiate the model function; x is the input (feature) variable
     model = model_func(x)
