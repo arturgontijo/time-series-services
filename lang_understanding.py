@@ -175,12 +175,12 @@ def main():
     emb_dim    = 150
     hidden_dim = 300
 
+    # Create the containers for input feature (x) and the label (y)
+    x_input = C.sequence.input_variable(vocab_size)
+    y_input = C.sequence.input_variable(num_labels)
+
     model_file = input("Model file name: ")
     if not os.path.exists(model_file):
-        # Create the containers for input feature (x) and the label (y)
-        x_input = C.sequence.input_variable(vocab_size)
-        y_input = C.sequence.input_variable(num_labels)
-
         z = create_model(emb_dim, hidden_dim, num_labels)
 
         # peek
@@ -193,7 +193,6 @@ def main():
         z.save(model_file)
     else:
         z = C.load_model(model_file)
-        x_input = C.logging.find_all_with_name(z, "")[-1]
 
     # load dictionaries
     query_wl = [line.rstrip('\n') for line in open(data['query']['file'])]
