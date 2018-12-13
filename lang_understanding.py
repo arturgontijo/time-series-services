@@ -198,6 +198,7 @@ def main():
     z = create_model(emb_dim, hidden_dim, num_labels)
     train(x, y, reader, z)
 
+    reader = create_reader(data['test']['file'], vocab_size, num_intents, num_labels, is_training=False)
     evaluate(x, y, reader, z)
 
     # load dictionaries
