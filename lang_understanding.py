@@ -190,6 +190,7 @@ def main():
     reader = create_reader(data['train']['file'], vocab_size, num_intents, num_labels, is_training=True)
     reader.streams.keys()
 
+    z = create_model(emb_dim, hidden_dim, num_labels)
     train(x, y, reader, z)
 
     evaluate(x, y, reader, z)
